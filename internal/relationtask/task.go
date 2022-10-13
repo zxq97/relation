@@ -12,7 +12,7 @@ var (
 	consumers = []*kafka.Consumer{}
 )
 
-func InitCommentTask(conf *RelationTaskConfig) error {
+func InitRelationTask(conf *RelationTaskConfig) error {
 	err := env.InitLog(conf.LogPath)
 	if err != nil {
 		return err

@@ -61,30 +61,30 @@ func Unfollow(ctx context.Context, uid, touid int64) error {
 }
 
 func GetAllUserFollow(ctx context.Context, uid int64) ([]*model.FollowItem, error) {
-	items := []*model.FollowItem{}
+	items := []*model.UserFollow{}
 	filter := db.Cond{"uid": uid}
 	err := dbCli.WithContext(ctx).Select("`to_uid`", "`create_time`").From(tableUserFollow).Where(filter).OrderBy("`create_time` DESC").All(&items)
-	return items, err
+	return model.DAO2DTO(items), err
 }
 
 func GetUserFollower(ctx context.Context, uid, lastid int64, limit int) ([]*model.FollowItem, error) {
-	items := []*model.FollowItem{}
+	items := []*model.UserFollow{}
 	filter := db.Cond{"uid": uid}
 	if lastid != 0 {
 		sql := fmt.Sprintf("SELECT `id` FROM %s WHERE `uid` = ? AND `to_uid` = ? LIMIT 1", tableUserFollower)
 		row, err := dbCli.QueryRowContext(ctx, sql, uid, lastid)
 		if err != nil {
-			return items, err
+			return model.DAO2DTO(items), err
 		}
 		var id int64
 		err = row.Scan(&id)
 		if err != nil {
-			return items, err
+			return model.DAO2DTO(items), err
 		}
 		filter["id < "] = id
 	}
 	err := dbCli.WithContext(ctx).Select("`to_uid`", "`create_time`").From(tableUserFollower).Where(filter).OrderBy("`create_time` DESC").Limit(limit).All(items)
-	return items, err
+	return model.DAO2DTO(items), err
 }
 
 func GetUsersFollowCount(ctx context.Context, uids []int64) (map[int64]*model.UserFollowCount, error) {

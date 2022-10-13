@@ -10,6 +10,7 @@ import (
 	"github.com/zxq97/gotool/cast"
 	"github.com/zxq97/gotool/concurrent"
 	"github.com/zxq97/relation/internal/constant"
+	"github.com/zxq97/relation/internal/env"
 	"github.com/zxq97/relation/internal/model"
 )
 
@@ -33,12 +34,12 @@ func getRelationCacheL1(ctx context.Context, keyPrefix string, uids []int64) (ma
 		list := &model.FollowList{}
 		err = proto.Unmarshal(v.Value, list)
 		if err != nil {
-			// log
+			env.ExcLogger.Println()
 			continue
 		}
 		s := strings.Split(k, "_")
 		if len(s) == 0 {
-			// log
+			env.ExcLogger.Println()
 			continue
 		}
 		itemMap[cast.ParseInt(s[len(s)-1], 0)] = list.List
@@ -57,12 +58,12 @@ func setRelationCacheL1(ctx context.Context, keyPrefix string, listMap map[int64
 		key := fmt.Sprintf(keyPrefix, k)
 		bs, err := proto.Marshal(v)
 		if err != nil {
-			// log
+			env.ExcLogger.Println()
 			continue
 		}
 		err = mcx.SetCtx(ctx, key, bs, relationCacheL1TTL)
 		if err != nil {
-			// log
+			env.ExcLogger.Println()
 		}
 	}
 }
@@ -71,13 +72,13 @@ func addRelationCacheL1(ctx context.Context, keyPrefix string, uid int64, itemLi
 	key := fmt.Sprintf(keyPrefix, uid)
 	val, err := mcx.GetCtx(ctx, key)
 	if err != nil {
-		// log
+		env.ExcLogger.Println()
 		return
 	}
 	list := model.FollowList{}
 	err = proto.Unmarshal(val.Value, &list)
 	if err != nil {
-		// log
+		env.ExcLogger.Println()
 		return
 	}
 	for _, v := range itemList {
@@ -85,12 +86,41 @@ func addRelationCacheL1(ctx context.Context, keyPrefix string, uid int64, itemLi
 	}
 	bs, err := proto.Marshal(&list)
 	if err != nil {
-		// log
+		env.ExcLogger.Println()
 		return
 	}
 	err = mcx.SetCtx(ctx, key, bs, relationCacheL1TTL)
 	if err != nil {
-		// log
+		env.ExcLogger.Println()
+	}
+}
+
+func delRelationCacheL1(ctx context.Context, keyPrefix string, uid, touid int64) {
+	key := fmt.Sprintf(keyPrefix, uid)
+	val, err := mcx.GetCtx(ctx, key)
+	if err != nil {
+		env.ExcLogger.Println()
+		return
+	}
+	list := model.FollowList{}
+	err = proto.Unmarshal(val.Value, &list)
+	if err != nil {
+		env.ExcLogger.Println()
+		return
+	}
+	for k, v := range list.List {
+		if v.ToUid == touid {
+			list.List = append(list.List[0:k], list.List[k:]...)
+		}
+	}
+	bs, err := proto.Marshal(&list)
+	if err != nil {
+		env.ExcLogger.Println()
+		return
+	}
+	err = mcx.SetCtx(ctx, key, bs, relationCacheL1TTL)
+	if err != nil {
+		env.ExcLogger.Println()
 	}
 }
 
@@ -131,6 +161,21 @@ func getRelationList(ctx context.Context, uid, lastid, offset int64, follow bool
 		right = len(list)
 	}
 	return list[idx+1 : right], nil
+}
+
+func AddRelation(ctx context.Context, uid int64, item *model.FollowItem) {
+	addRelationCacheL1(ctx, mcKeyUserFollow, uid, []*model.FollowItem{item})
+	addRelationCacheL2(ctx, redisKeyHUserFollow, uid, item)
+	follower := item
+	tuid := follower.ToUid
+	follower.ToUid = uid
+	addRelationCacheL1(ctx, mcKeyUserFollower, tuid, []*model.FollowItem{follower})
+}
+
+func DelRelation(ctx context.Context, uid, touid int64) {
+	delRelationCacheL1(ctx, mcKeyUserFollow, uid, touid)
+	delRelationCacheL1(ctx, mcKeyUserFollower, touid, uid)
+	delRelationCacheL2(ctx, redisKeyHUserFollow, uid, touid)
 }
 
 func GetFollowList(ctx context.Context, uid, lastid, offset int64) ([]*model.FollowItem, error) {

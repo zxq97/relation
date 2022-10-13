@@ -29,7 +29,7 @@ var (
 type RelationSvc struct {
 }
 
-func InitCommentSvc(conf *RelationSvcConfig) error {
+func InitRelationSvc(conf *RelationSvcConfig) error {
 	err := env.InitLog(conf.LogPath)
 	if err != nil {
 		return err

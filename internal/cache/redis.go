@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-redis/redis/v8"
 	"github.com/zxq97/gotool/cast"
+	"github.com/zxq97/relation/internal/env"
 	"github.com/zxq97/relation/internal/model"
 )
 
@@ -30,7 +31,7 @@ func getRelationCacheL2(ctx context.Context, keyPrefix string, uids []int64) (ma
 	for k, v := range cmdMap {
 		val, err := v.Result()
 		if err != nil {
-			// log
+			env.ExcLogger.Println()
 			continue
 		}
 		itemMap[k] = make([]*model.FollowItem, len(val))
@@ -60,19 +61,21 @@ func setRelationCacheL2(ctx context.Context, keyPrefix string, listMap map[int64
 	}
 	_, err := pipe.Exec(ctx)
 	if err != nil {
-		// log
+		env.ExcLogger.Println()
 	}
 }
 
-func addRelationCacheL2(ctx context.Context, keyPrefix string, uid int64, itemList []*model.FollowItem) {
-	pipe := rdx.Pipeline()
-	field := make(map[string]interface{}, len(itemList))
-	key := fmt.Sprintf(keyPrefix, uid)
-	pipe.HMSet(ctx, key, field)
-	pipe.Expire(ctx, key, relationCacheL2TTL)
-	_, err := pipe.Exec(ctx)
-	if err != nil {
-		// log
+func addRelationCacheL2(ctx context.Context, keyPrefix string, uid int64, item *model.FollowItem) {
+	fieldMap := make(map[string]interface{}, 1)
+	fieldMap[cast.FormatInt(item.ToUid)] = item.CreateTime
+	if err := rdx.HMSetXEX(ctx, fmt.Sprintf(keyPrefix, uid), fieldMap, relationCacheL2TTL); err != nil {
+		env.ExcLogger.Println()
+	}
+}
+
+func delRelationCacheL2(ctx context.Context, keyPrefix string, uid, touid int64) {
+	if err := rdx.HDel(ctx, fmt.Sprintf(keyPrefix, uid), cast.FormatInt(touid)); err != nil {
+		env.ExcLogger.Println()
 	}
 }
 
@@ -88,7 +91,7 @@ func IsFollows(ctx context.Context, uid int64, uids []int64) (map[int64]struct{}
 	for k, v := range uids {
 		us[k] = cast.FormatInt(v)
 	}
-	val, err := rdx.HMGetEX(ctx, key, relationCacheL2TTL, us...)
+	val, err := rdx.HMGetXEX(ctx, key, relationCacheL2TTL, us...)
 	if err != nil {
 		return nil, err
 	}
@@ -106,7 +109,7 @@ func IsFollowers(ctx context.Context, uid int64, uids []int64) (map[int64]struct
 	rm := make(map[int64]struct{}, len(uids))
 	for _, v := range uids {
 		key := fmt.Sprintf(redisKeyHUserFollower, v)
-		val, err := rdx.HMGetEX(ctx, key, relationCacheL2TTL, cast.FormatInt(uid))
+		val, err := rdx.HMGetXEX(ctx, key, relationCacheL2TTL, cast.FormatInt(uid))
 		if err != nil {
 			missed = append(missed, v)
 			continue

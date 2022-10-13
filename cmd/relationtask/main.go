@@ -10,7 +10,6 @@ import (
 	"syscall"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/zxq97/comment/internal/commenttask"
 	"github.com/zxq97/gotool/config"
 	"github.com/zxq97/relation/internal/relationtask"
 )
@@ -28,7 +27,7 @@ func main() {
 	}
 	conf.Initialize()
 
-	err = relationtask.InitCommentTask(&conf)
+	err = relationtask.InitRelationTask(&conf)
 	if err != nil {
 		panic(err)
 	}

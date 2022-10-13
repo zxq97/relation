@@ -27,7 +27,7 @@ func main() {
 		panic(err)
 	}
 	conf.Initialize()
-	err = relationsvc.InitCommentSvc(&conf)
+	err = relationsvc.InitRelationSvc(&conf)
 	if err != nil {
 		panic(err)
 	}

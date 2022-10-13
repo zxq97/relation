@@ -22,7 +22,7 @@ func packKafkaMsg(ctx context.Context, req proto.Message, eventtype int32) ([]by
 	}
 	bs, err := proto.Marshal(req)
 	if err != nil {
-		env.ExcLogger.Printf("ctx %v CreateComment Marshal req %#v err %v", ctx, req, err)
+		env.ExcLogger.Printf("ctx %v follow Marshal req %#v err %v", ctx, req, err)
 		return nil, err
 	}
 	kfkmsg := &kafka.KafkaMessage{
@@ -32,7 +32,7 @@ func packKafkaMsg(ctx context.Context, req proto.Message, eventtype int32) ([]by
 	}
 	bs, err = proto.Marshal(kfkmsg)
 	if err != nil {
-		env.ExcLogger.Printf("ctx %v CreateComment Marshal kfkmsg %#v err %v", ctx, kfkmsg, err)
+		env.ExcLogger.Printf("ctx %v follow Marshal kfkmsg %#v err %v", ctx, kfkmsg, err)
 	}
 	return bs, err
 }
