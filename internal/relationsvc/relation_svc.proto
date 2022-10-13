@@ -1,0 +1,33 @@
+syntax = "proto3";
+package relationsvc;
+import "internal/model/relation.proto";
+
+message EmptyResponse {
+}
+
+message FollowRequest {
+  int64 uid = 1;
+  int64 to_uid = 2;
+}
+
+message RelationRequest {
+  int64 uid = 1;
+  repeated int64 uids = 2;
+}
+
+message RelationResponse {
+  map<int64, int32> rm = 1;
+}
+
+message ListRequest {
+  int64 uid = 1;
+  int64 last_id = 2;
+}
+
+service RelationSvc {
+  rpc Follow(FollowRequest) returns (EmptyResponse);
+  rpc Unfollow(FollowRequest) returns (EmptyResponse);
+  rpc GetFollowList(ListRequest) returns (model.FollowList);
+  rpc GetFollowerList(ListRequest) returns (model.FollowList);
+  rpc GetRelation(RelationRequest) returns (RelationResponse);
+}

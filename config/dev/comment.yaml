@@ -1,0 +1,12 @@
+svc:
+  name: relationbff
+  http_bind: :9980
+  bind: :10080
+
+include_etcd: /Users/zongxingquan/goland/conf/dev/etcd.yaml
+include_hystrix: /Users/zongxingquan/goland/conf/dev/hystrix.yaml
+
+log_path:
+  api: /Users/zongxingquan/goland/log/relation/api.log
+  exc: /Users/zongxingquan/goland/log/relation/exc.log
+  debug: /Users/zongxingquan/goland/log/relation/debug.log
