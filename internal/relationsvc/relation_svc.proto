@@ -24,10 +24,24 @@ message ListRequest {
   int64 last_id = 2;
 }
 
+message CountRequest {
+  repeated int64 uids = 1;
+}
+
+message RelationCount {
+  int64 follow_count = 1;
+  int64 follower_count = 2;
+}
+
+message CountResponse {
+  map<int64, RelationCount> relation_count = 1;
+}
+
 service RelationSvc {
   rpc Follow(FollowRequest) returns (EmptyResponse);
   rpc Unfollow(FollowRequest) returns (EmptyResponse);
   rpc GetFollowList(ListRequest) returns (model.FollowList);
   rpc GetFollowerList(ListRequest) returns (model.FollowList);
   rpc GetRelation(RelationRequest) returns (RelationResponse);
+  rpc GetRelationCount(CountRequest) returns (CountResponse);
 }

@@ -47,6 +47,11 @@ func rebuild(ctx context.Context, kfkmsg *kafka.KafkaMessage) {
 	}
 	switch kfkmsg.EventType {
 	case kafka.EventTypeListMissed:
-
+		item, err := store.GetUserFollower(ctx, list.Uid, list.LastId, 100)
+		if err != nil {
+			env.ExcLogger.Println()
+			return
+		}
+		cache.AddUserFollower(ctx, list.Uid, item)
 	}
 }

@@ -107,7 +107,7 @@ func (RelationSvc) GetFollowerList(ctx context.Context, req *ListRequest) (*mode
 				return list, err
 			}
 			shardKey := cast.FormatInt(req.Uid)
-			return list, producer.SendMessage(kafka.TopicRelationOperator, []byte(shardKey), bs)
+			return list, producer.SendMessage(kafka.TopicRelationCacheRebuild, []byte(shardKey), bs)
 		}
 		return list, nil
 	})
@@ -163,4 +163,26 @@ func (RelationSvc) GetRelation(ctx context.Context, req *RelationRequest) (*Rela
 		relationMap[k] |= 2
 	}
 	return &RelationResponse{Rm: relationMap}, nil
+}
+
+func (RelationSvc) GetRelationCount(ctx context.Context, req *CountRequest) (*CountResponse, error) {
+	fm, missed, err := cache.GetRelationCount(ctx, req.Uids)
+	if err != nil || len(missed) > 0 {
+		dbm, err := store.GetUsersFollowCount(ctx, req.Uids)
+		if err != nil {
+			// log
+			return &CountResponse{}, err
+		}
+		for k, v := range dbm {
+			fm[k] = v
+		}
+		// 缓存零关注数
+		for _, v := range req.Uids {
+			if _, ok := fm[v]; !ok {
+				dbm[v] = &model.UserFollowCount{}
+			}
+		}
+		cache.SetRelationCount(ctx, dbm)
+	}
+	return &CountResponse{RelationCount: model.FcDAO2DTO(fm)}, nil
 }

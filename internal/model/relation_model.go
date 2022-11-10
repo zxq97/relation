@@ -1,6 +1,10 @@
 package model
 
-import "time"
+import (
+	"time"
+
+	"github.com/zxq97/relation/internal/relationsvc"
+)
 
 type UserFollow struct {
 	ToUID      int64     `db:"to_uid"`
@@ -13,7 +17,7 @@ type UserFollowCount struct {
 	FollowerCount int32 `db:"uid"`
 }
 
-func DAO2DTO(list []*UserFollow) []*FollowItem {
+func UfDAO2DTO(list []*UserFollow) []*FollowItem {
 	itemList := make([]*FollowItem, len(list))
 	for k, v := range list {
 		itemList[k] = &FollowItem{
@@ -22,4 +26,15 @@ func DAO2DTO(list []*UserFollow) []*FollowItem {
 		}
 	}
 	return itemList
+}
+
+func FcDAO2DTO(m map[int64]*UserFollowCount) map[int64]*relationsvc.RelationCount {
+	rm := make(map[int64]*relationsvc.RelationCount, len(m))
+	for k, v := range m {
+		rm[k] = &relationsvc.RelationCount{
+			FollowCount:   int64(v.FollowCount),
+			FollowerCount: int64(v.FollowerCount),
+		}
+	}
+	return rm
 }

@@ -165,17 +165,23 @@ func getRelationList(ctx context.Context, uid, lastid, offset int64, follow bool
 
 func AddRelation(ctx context.Context, uid int64, item *model.FollowItem) {
 	addRelationCacheL1(ctx, mcKeyUserFollow, uid, []*model.FollowItem{item})
-	addRelationCacheL2(ctx, redisKeyHUserFollow, uid, item)
+	addRelationCacheL2(ctx, redisKeyHUserFollow, uid, []*model.FollowItem{item})
 	follower := item
 	tuid := follower.ToUid
 	follower.ToUid = uid
 	addRelationCacheL1(ctx, mcKeyUserFollower, tuid, []*model.FollowItem{follower})
+	addRelationCount(ctx, uid, item.ToUid, 1)
+}
+
+func AddUserFollower(ctx context.Context, uid int64, list []*model.FollowItem) {
+	addRelationCacheL1(ctx, mcKeyUserFollower, uid, list)
 }
 
 func DelRelation(ctx context.Context, uid, touid int64) {
 	delRelationCacheL1(ctx, mcKeyUserFollow, uid, touid)
 	delRelationCacheL1(ctx, mcKeyUserFollower, touid, uid)
 	delRelationCacheL2(ctx, redisKeyHUserFollow, uid, touid)
+	addRelationCount(ctx, uid, touid, -1)
 }
 
 func GetFollowList(ctx context.Context, uid, lastid, offset int64) ([]*model.FollowItem, error) {

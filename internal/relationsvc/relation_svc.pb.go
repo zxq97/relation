@@ -278,6 +278,155 @@ func (m *ListRequest) GetLastId() int64 {
 	return 0
 }
 
+type CountRequest struct {
+	Uids                 []int64  `protobuf:"varint,1,rep,packed,name=uids,proto3" json:"uids,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *CountRequest) Reset()         { *m = CountRequest{} }
+func (m *CountRequest) String() string { return proto.CompactTextString(m) }
+func (*CountRequest) ProtoMessage()    {}
+func (*CountRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_d3247fba2014e40f, []int{5}
+}
+func (m *CountRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *CountRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_CountRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *CountRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CountRequest.Merge(m, src)
+}
+func (m *CountRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *CountRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_CountRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_CountRequest proto.InternalMessageInfo
+
+func (m *CountRequest) GetUids() []int64 {
+	if m != nil {
+		return m.Uids
+	}
+	return nil
+}
+
+type RelationCount struct {
+	FollowCount          int64    `protobuf:"varint,1,opt,name=follow_count,json=followCount,proto3" json:"follow_count,omitempty"`
+	FollowerCount        int64    `protobuf:"varint,2,opt,name=follower_count,json=followerCount,proto3" json:"follower_count,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *RelationCount) Reset()         { *m = RelationCount{} }
+func (m *RelationCount) String() string { return proto.CompactTextString(m) }
+func (*RelationCount) ProtoMessage()    {}
+func (*RelationCount) Descriptor() ([]byte, []int) {
+	return fileDescriptor_d3247fba2014e40f, []int{6}
+}
+func (m *RelationCount) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *RelationCount) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_RelationCount.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *RelationCount) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RelationCount.Merge(m, src)
+}
+func (m *RelationCount) XXX_Size() int {
+	return m.Size()
+}
+func (m *RelationCount) XXX_DiscardUnknown() {
+	xxx_messageInfo_RelationCount.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_RelationCount proto.InternalMessageInfo
+
+func (m *RelationCount) GetFollowCount() int64 {
+	if m != nil {
+		return m.FollowCount
+	}
+	return 0
+}
+
+func (m *RelationCount) GetFollowerCount() int64 {
+	if m != nil {
+		return m.FollowerCount
+	}
+	return 0
+}
+
+type CountResponse struct {
+	RelationCount        map[int64]*RelationCount `protobuf:"bytes,1,rep,name=relation_count,json=relationCount,proto3" json:"relation_count,omitempty" protobuf_key:"varint,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	XXX_NoUnkeyedLiteral struct{}                 `json:"-"`
+	XXX_unrecognized     []byte                   `json:"-"`
+	XXX_sizecache        int32                    `json:"-"`
+}
+
+func (m *CountResponse) Reset()         { *m = CountResponse{} }
+func (m *CountResponse) String() string { return proto.CompactTextString(m) }
+func (*CountResponse) ProtoMessage()    {}
+func (*CountResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_d3247fba2014e40f, []int{7}
+}
+func (m *CountResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *CountResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_CountResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *CountResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CountResponse.Merge(m, src)
+}
+func (m *CountResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *CountResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_CountResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_CountResponse proto.InternalMessageInfo
+
+func (m *CountResponse) GetRelationCount() map[int64]*RelationCount {
+	if m != nil {
+		return m.RelationCount
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*EmptyResponse)(nil), "relationsvc.EmptyResponse")
 	proto.RegisterType((*FollowRequest)(nil), "relationsvc.FollowRequest")
@@ -285,6 +434,10 @@ func init() {
 	proto.RegisterType((*RelationResponse)(nil), "relationsvc.RelationResponse")
 	proto.RegisterMapType((map[int64]int32)(nil), "relationsvc.RelationResponse.RmEntry")
 	proto.RegisterType((*ListRequest)(nil), "relationsvc.ListRequest")
+	proto.RegisterType((*CountRequest)(nil), "relationsvc.CountRequest")
+	proto.RegisterType((*RelationCount)(nil), "relationsvc.RelationCount")
+	proto.RegisterType((*CountResponse)(nil), "relationsvc.CountResponse")
+	proto.RegisterMapType((map[int64]*RelationCount)(nil), "relationsvc.CountResponse.RelationCountEntry")
 }
 
 func init() {
@@ -292,31 +445,39 @@ func init() {
 }
 
 var fileDescriptor_d3247fba2014e40f = []byte{
-	// 378 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x52, 0xd1, 0x4a, 0xeb, 0x40,
-	0x10, 0xbd, 0x9b, 0xdc, 0xa6, 0x97, 0x09, 0xa5, 0xbd, 0x8b, 0x62, 0x08, 0x36, 0x94, 0x80, 0xd8,
-	0xa7, 0x08, 0x95, 0x62, 0x11, 0x11, 0x29, 0xd4, 0xa2, 0xf8, 0xb4, 0xd2, 0xe7, 0x12, 0x9b, 0x15,
-	0x42, 0x93, 0x6c, 0xcd, 0x6e, 0x22, 0x79, 0xf3, 0x33, 0xfc, 0x24, 0x1f, 0xfd, 0x01, 0x41, 0xea,
-	0x8f, 0x48, 0x92, 0x36, 0x4d, 0x84, 0x0a, 0xe2, 0xdb, 0xcc, 0xee, 0x39, 0x33, 0xe7, 0xcc, 0x0c,
-	0x1c, 0xba, 0x81, 0xa0, 0x61, 0x60, 0x7b, 0x47, 0x21, 0xf5, 0x6c, 0xe1, 0xb2, 0x80, 0xc7, 0xb3,
-	0x22, 0x9e, 0xf2, 0x78, 0x66, 0x2d, 0x42, 0x26, 0x18, 0x56, 0x4b, 0xff, 0x7a, 0xbb, 0x60, 0xf9,
-	0xcc, 0xa1, 0x1b, 0x6e, 0x8e, 0x35, 0x9b, 0xd0, 0x18, 0xf9, 0x0b, 0x91, 0x10, 0xca, 0x17, 0x2c,
-	0xe0, 0xd4, 0x1c, 0x40, 0xe3, 0x92, 0x79, 0x1e, 0x7b, 0x24, 0xf4, 0x21, 0xa2, 0x5c, 0xe0, 0x16,
-	0xc8, 0x91, 0xeb, 0x68, 0xa8, 0x83, 0xba, 0x32, 0x49, 0x43, 0xbc, 0x0b, 0x8a, 0x60, 0xd3, 0xf4,
-	0x51, 0xca, 0x1e, 0x6b, 0x82, 0x4d, 0x5c, 0xc7, 0x3c, 0x81, 0x26, 0x59, 0x15, 0xdf, 0xce, 0xc5,
-	0xf0, 0x37, 0x72, 0x1d, 0xae, 0x49, 0x1d, 0xb9, 0x2b, 0x93, 0x2c, 0x36, 0x9f, 0x10, 0xb4, 0x36,
-	0xcc, 0x5c, 0x07, 0xee, 0x83, 0x14, 0xfa, 0x1a, 0xea, 0xc8, 0x5d, 0xb5, 0x77, 0x60, 0x95, 0x1c,
-	0x59, 0x5f, 0xa1, 0x16, 0xf1, 0x47, 0x81, 0x08, 0x13, 0x22, 0x85, 0xbe, 0xde, 0x87, 0xfa, 0x2a,
-	0x4d, 0x9b, 0xcf, 0x69, 0xb2, 0x6e, 0x3e, 0xa7, 0x09, 0xde, 0x81, 0x5a, 0x6c, 0x7b, 0x11, 0xcd,
-	0x74, 0xd7, 0x48, 0x9e, 0x9c, 0x4a, 0x03, 0x64, 0x0e, 0x40, 0xbd, 0x71, 0xb9, 0xd8, 0xae, 0x7b,
-	0x0f, 0xea, 0x9e, 0xcd, 0xc5, 0xb4, 0x30, 0xad, 0xa4, 0xe9, 0x95, 0xd3, 0x7b, 0x93, 0x40, 0x5d,
-	0x2b, 0xba, 0x8d, 0x67, 0xf8, 0x02, 0x94, 0x7c, 0x7e, 0x58, 0xaf, 0xa8, 0xae, 0x0c, 0x55, 0xaf,
-	0xfe, 0x55, 0x36, 0x80, 0x87, 0xf0, 0x6f, 0x12, 0xdc, 0xff, 0xae, 0xc6, 0x19, 0x34, 0xc6, 0x54,
-	0xe4, 0xf8, 0xd4, 0x18, 0xd6, 0x2a, 0xe0, 0x92, 0x57, 0xfd, 0xbf, 0x95, 0x1d, 0x86, 0x55, 0x02,
-	0x9f, 0x43, 0xb3, 0x60, 0xd3, 0xf0, 0xe7, 0xfc, 0x6b, 0x50, 0xc7, 0x54, 0xac, 0xa7, 0x82, 0xf7,
-	0xb7, 0xac, 0x2f, 0xe7, 0xb7, 0xbf, 0x5d, 0xee, 0xb0, 0xf5, 0xb2, 0x34, 0xd0, 0xeb, 0xd2, 0x40,
-	0xef, 0x4b, 0x03, 0x3d, 0x7f, 0x18, 0x7f, 0xee, 0x94, 0xec, 0x72, 0x8f, 0x3f, 0x03, 0x00, 0x00,
-	0xff, 0xff, 0x4d, 0x9d, 0xa2, 0x75, 0x10, 0x03, 0x00, 0x00,
+	// 500 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x54, 0xdd, 0x8a, 0xd3, 0x40,
+	0x14, 0x76, 0x12, 0xdb, 0x95, 0x93, 0xcd, 0xb6, 0x0e, 0x8a, 0x35, 0xb8, 0xa5, 0x06, 0x16, 0x7b,
+	0x63, 0x94, 0xca, 0x62, 0x11, 0x11, 0x59, 0x59, 0x97, 0x15, 0xaf, 0x46, 0xf7, 0x42, 0x10, 0x4a,
+	0x6d, 0x66, 0x21, 0x6c, 0x92, 0xa9, 0x33, 0x93, 0x4a, 0xef, 0x7c, 0x0c, 0x1f, 0xc1, 0xf7, 0xf0,
+	0xc6, 0x4b, 0x1f, 0x41, 0xea, 0x8b, 0x48, 0x66, 0x92, 0x74, 0x46, 0x5b, 0x41, 0xf6, 0x6e, 0xce,
+	0x99, 0xef, 0x3b, 0x3f, 0x5f, 0xbe, 0x09, 0xdc, 0x4b, 0x72, 0x49, 0x79, 0x3e, 0x4d, 0x1f, 0x70,
+	0x9a, 0x4e, 0x65, 0xc2, 0x72, 0xb1, 0x98, 0x35, 0xe7, 0x89, 0x58, 0xcc, 0xa2, 0x39, 0x67, 0x92,
+	0x61, 0xcf, 0xb8, 0x0f, 0xf6, 0x1b, 0x56, 0xc6, 0x62, 0xba, 0xe6, 0x6a, 0x6c, 0xd8, 0x01, 0xff,
+	0x38, 0x9b, 0xcb, 0x25, 0xa1, 0x62, 0xce, 0x72, 0x41, 0xc3, 0x31, 0xf8, 0x2f, 0x59, 0x9a, 0xb2,
+	0x4f, 0x84, 0x7e, 0x2c, 0xa8, 0x90, 0xb8, 0x0b, 0x6e, 0x91, 0xc4, 0x3d, 0x34, 0x40, 0x43, 0x97,
+	0x94, 0x47, 0x7c, 0x13, 0xda, 0x92, 0x4d, 0xca, 0xa4, 0xa3, 0x92, 0x2d, 0xc9, 0xce, 0x92, 0x38,
+	0x7c, 0x0c, 0x1d, 0x52, 0x15, 0xdf, 0xce, 0xc5, 0x70, 0xb5, 0x48, 0x62, 0xd1, 0x73, 0x06, 0xee,
+	0xd0, 0x25, 0xea, 0x1c, 0x7e, 0x46, 0xd0, 0x5d, 0x33, 0xf5, 0x1c, 0xf8, 0x10, 0x1c, 0x9e, 0xf5,
+	0xd0, 0xc0, 0x1d, 0x7a, 0xa3, 0x83, 0xc8, 0xd8, 0x28, 0xfa, 0x13, 0x1a, 0x91, 0xec, 0x38, 0x97,
+	0x7c, 0x49, 0x1c, 0x9e, 0x05, 0x87, 0xb0, 0x53, 0x85, 0x65, 0xf3, 0x0b, 0xba, 0xac, 0x9b, 0x5f,
+	0xd0, 0x25, 0xbe, 0x01, 0xad, 0xc5, 0x34, 0x2d, 0xa8, 0x9a, 0xbb, 0x45, 0x74, 0xf0, 0xc4, 0x19,
+	0xa3, 0x70, 0x0c, 0xde, 0xeb, 0x44, 0xc8, 0xed, 0x73, 0xdf, 0x82, 0x9d, 0x74, 0x2a, 0xe4, 0xa4,
+	0x59, 0xba, 0x5d, 0x86, 0xa7, 0x71, 0x18, 0xc2, 0xee, 0x0b, 0x56, 0xe4, 0x0d, 0xb5, 0x5e, 0x10,
+	0x19, 0x0b, 0xbe, 0x03, 0xbf, 0x1e, 0x5a, 0x61, 0xf1, 0x5d, 0xd8, 0x3d, 0x57, 0x22, 0x4f, 0x66,
+	0x65, 0x5c, 0x35, 0xf2, 0x74, 0x4e, 0x43, 0x0e, 0x60, 0x4f, 0x87, 0x94, 0x57, 0x20, 0xdd, 0xd7,
+	0xaf, 0xb3, 0x0a, 0x16, 0x7e, 0x43, 0xe0, 0x57, 0xfd, 0x2b, 0xe1, 0xde, 0xc2, 0x5e, 0xe3, 0x89,
+	0xba, 0x7a, 0x29, 0xe2, 0x7d, 0x4b, 0x44, 0x8b, 0x13, 0x59, 0xd3, 0x69, 0x31, 0x7d, 0x6e, 0xe6,
+	0x82, 0xf7, 0x80, 0xff, 0x06, 0x6d, 0x90, 0xf8, 0xa1, 0x29, 0xb1, 0x37, 0x0a, 0x36, 0x7e, 0x39,
+	0xdd, 0x7c, 0x2d, 0xff, 0xe8, 0xab, 0x0b, 0x5e, 0x7d, 0xf9, 0x66, 0x31, 0xc3, 0xcf, 0xa1, 0xad,
+	0x4d, 0x88, 0xed, 0x02, 0x96, 0x33, 0x03, 0xfb, 0xce, 0xb2, 0x31, 0x3e, 0x82, 0x6b, 0x67, 0xf9,
+	0xf9, 0xe5, 0x6a, 0x3c, 0x05, 0xff, 0x84, 0x4a, 0x8d, 0x2f, 0xdd, 0x81, 0x7b, 0x16, 0xd8, 0x30,
+	0x4c, 0x70, 0x3d, 0x52, 0xaf, 0x2b, 0x32, 0xc0, 0xcf, 0xa0, 0xd3, 0xb0, 0x29, 0xff, 0x7f, 0xfe,
+	0x2b, 0xf0, 0x4e, 0xa8, 0xac, 0x55, 0xc1, 0x77, 0xb6, 0xbc, 0x01, 0xcd, 0xdf, 0xff, 0xe7, 0x0b,
+	0xc1, 0xa7, 0xd0, 0x35, 0x6a, 0x69, 0x83, 0xdd, 0xde, 0xe4, 0x87, 0x4d, 0xa2, 0x58, 0x56, 0x39,
+	0xea, 0x7e, 0x5f, 0xf5, 0xd1, 0x8f, 0x55, 0x1f, 0xfd, 0x5c, 0xf5, 0xd1, 0x97, 0x5f, 0xfd, 0x2b,
+	0x1f, 0xda, 0xea, 0x4f, 0xf2, 0xe8, 0x77, 0x00, 0x00, 0x00, 0xff, 0xff, 0xf9, 0x92, 0x43, 0x73,
+	0xa0, 0x04, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -336,6 +497,7 @@ type RelationSvcClient interface {
 	GetFollowList(ctx context.Context, in *ListRequest, opts ...grpc.CallOption) (*model.FollowList, error)
 	GetFollowerList(ctx context.Context, in *ListRequest, opts ...grpc.CallOption) (*model.FollowList, error)
 	GetRelation(ctx context.Context, in *RelationRequest, opts ...grpc.CallOption) (*RelationResponse, error)
+	GetRelationCount(ctx context.Context, in *CountRequest, opts ...grpc.CallOption) (*CountResponse, error)
 }
 
 type relationSvcClient struct {
@@ -391,6 +553,15 @@ func (c *relationSvcClient) GetRelation(ctx context.Context, in *RelationRequest
 	return out, nil
 }
 
+func (c *relationSvcClient) GetRelationCount(ctx context.Context, in *CountRequest, opts ...grpc.CallOption) (*CountResponse, error) {
+	out := new(CountResponse)
+	err := c.cc.Invoke(ctx, "/relationsvc.RelationSvc/GetRelationCount", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // RelationSvcServer is the server API for RelationSvc service.
 type RelationSvcServer interface {
 	Follow(context.Context, *FollowRequest) (*EmptyResponse, error)
@@ -398,6 +569,7 @@ type RelationSvcServer interface {
 	GetFollowList(context.Context, *ListRequest) (*model.FollowList, error)
 	GetFollowerList(context.Context, *ListRequest) (*model.FollowList, error)
 	GetRelation(context.Context, *RelationRequest) (*RelationResponse, error)
+	GetRelationCount(context.Context, *CountRequest) (*CountResponse, error)
 }
 
 // UnimplementedRelationSvcServer can be embedded to have forward compatible implementations.
@@ -418,6 +590,9 @@ func (*UnimplementedRelationSvcServer) GetFollowerList(ctx context.Context, req 
 }
 func (*UnimplementedRelationSvcServer) GetRelation(ctx context.Context, req *RelationRequest) (*RelationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetRelation not implemented")
+}
+func (*UnimplementedRelationSvcServer) GetRelationCount(ctx context.Context, req *CountRequest) (*CountResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetRelationCount not implemented")
 }
 
 func RegisterRelationSvcServer(s *grpc.Server, srv RelationSvcServer) {
@@ -514,6 +689,24 @@ func _RelationSvc_GetRelation_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _RelationSvc_GetRelationCount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CountRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RelationSvcServer).GetRelationCount(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/relationsvc.RelationSvc/GetRelationCount",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RelationSvcServer).GetRelationCount(ctx, req.(*CountRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _RelationSvc_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "relationsvc.RelationSvc",
 	HandlerType: (*RelationSvcServer)(nil),
@@ -537,6 +730,10 @@ var _RelationSvc_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetRelation",
 			Handler:    _RelationSvc_GetRelation_Handler,
+		},
+		{
+			MethodName: "GetRelationCount",
+			Handler:    _RelationSvc_GetRelationCount_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -737,6 +934,140 @@ func (m *ListRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *CountRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *CountRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *CountRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	if len(m.Uids) > 0 {
+		dAtA4 := make([]byte, len(m.Uids)*10)
+		var j3 int
+		for _, num1 := range m.Uids {
+			num := uint64(num1)
+			for num >= 1<<7 {
+				dAtA4[j3] = uint8(uint64(num)&0x7f | 0x80)
+				num >>= 7
+				j3++
+			}
+			dAtA4[j3] = uint8(num)
+			j3++
+		}
+		i -= j3
+		copy(dAtA[i:], dAtA4[:j3])
+		i = encodeVarintRelationSvc(dAtA, i, uint64(j3))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *RelationCount) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *RelationCount) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *RelationCount) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	if m.FollowerCount != 0 {
+		i = encodeVarintRelationSvc(dAtA, i, uint64(m.FollowerCount))
+		i--
+		dAtA[i] = 0x10
+	}
+	if m.FollowCount != 0 {
+		i = encodeVarintRelationSvc(dAtA, i, uint64(m.FollowCount))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *CountResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *CountResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *CountResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	if len(m.RelationCount) > 0 {
+		for k := range m.RelationCount {
+			v := m.RelationCount[k]
+			baseI := i
+			if v != nil {
+				{
+					size, err := v.MarshalToSizedBuffer(dAtA[:i])
+					if err != nil {
+						return 0, err
+					}
+					i -= size
+					i = encodeVarintRelationSvc(dAtA, i, uint64(size))
+				}
+				i--
+				dAtA[i] = 0x12
+			}
+			i = encodeVarintRelationSvc(dAtA, i, uint64(k))
+			i--
+			dAtA[i] = 0x8
+			i = encodeVarintRelationSvc(dAtA, i, uint64(baseI-i))
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintRelationSvc(dAtA []byte, offset int, v uint64) int {
 	offset -= sovRelationSvc(v)
 	base := offset
@@ -831,6 +1162,68 @@ func (m *ListRequest) Size() (n int) {
 	}
 	if m.LastId != 0 {
 		n += 1 + sovRelationSvc(uint64(m.LastId))
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *CountRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Uids) > 0 {
+		l = 0
+		for _, e := range m.Uids {
+			l += sovRelationSvc(uint64(e))
+		}
+		n += 1 + sovRelationSvc(uint64(l)) + l
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *RelationCount) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.FollowCount != 0 {
+		n += 1 + sovRelationSvc(uint64(m.FollowCount))
+	}
+	if m.FollowerCount != 0 {
+		n += 1 + sovRelationSvc(uint64(m.FollowerCount))
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *CountResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.RelationCount) > 0 {
+		for k, v := range m.RelationCount {
+			_ = k
+			_ = v
+			l = 0
+			if v != nil {
+				l = v.Size()
+				l += 1 + sovRelationSvc(uint64(l))
+			}
+			mapEntrySize := 1 + sovRelationSvc(uint64(k)) + l
+			n += mapEntrySize + 1 + sovRelationSvc(uint64(mapEntrySize))
+		}
 	}
 	if m.XXX_unrecognized != nil {
 		n += len(m.XXX_unrecognized)
@@ -1347,6 +1740,388 @@ func (m *ListRequest) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipRelationSvc(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthRelationSvc
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *CountRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowRelationSvc
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: CountRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: CountRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType == 0 {
+				var v int64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowRelationSvc
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= int64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				m.Uids = append(m.Uids, v)
+			} else if wireType == 2 {
+				var packedLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowRelationSvc
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					packedLen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if packedLen < 0 {
+					return ErrInvalidLengthRelationSvc
+				}
+				postIndex := iNdEx + packedLen
+				if postIndex < 0 {
+					return ErrInvalidLengthRelationSvc
+				}
+				if postIndex > l {
+					return io.ErrUnexpectedEOF
+				}
+				var elementCount int
+				var count int
+				for _, integer := range dAtA[iNdEx:postIndex] {
+					if integer < 128 {
+						count++
+					}
+				}
+				elementCount = count
+				if elementCount != 0 && len(m.Uids) == 0 {
+					m.Uids = make([]int64, 0, elementCount)
+				}
+				for iNdEx < postIndex {
+					var v int64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowRelationSvc
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						v |= int64(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					m.Uids = append(m.Uids, v)
+				}
+			} else {
+				return fmt.Errorf("proto: wrong wireType = %d for field Uids", wireType)
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipRelationSvc(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthRelationSvc
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *RelationCount) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowRelationSvc
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: RelationCount: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: RelationCount: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FollowCount", wireType)
+			}
+			m.FollowCount = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowRelationSvc
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.FollowCount |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FollowerCount", wireType)
+			}
+			m.FollowerCount = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowRelationSvc
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.FollowerCount |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipRelationSvc(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthRelationSvc
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *CountResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowRelationSvc
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: CountResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: CountResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RelationCount", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowRelationSvc
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthRelationSvc
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthRelationSvc
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.RelationCount == nil {
+				m.RelationCount = make(map[int64]*RelationCount)
+			}
+			var mapkey int64
+			var mapvalue *RelationCount
+			for iNdEx < postIndex {
+				entryPreIndex := iNdEx
+				var wire uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowRelationSvc
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					wire |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				fieldNum := int32(wire >> 3)
+				if fieldNum == 1 {
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowRelationSvc
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						mapkey |= int64(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+				} else if fieldNum == 2 {
+					var mapmsglen int
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowRelationSvc
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						mapmsglen |= int(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					if mapmsglen < 0 {
+						return ErrInvalidLengthRelationSvc
+					}
+					postmsgIndex := iNdEx + mapmsglen
+					if postmsgIndex < 0 {
+						return ErrInvalidLengthRelationSvc
+					}
+					if postmsgIndex > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapvalue = &RelationCount{}
+					if err := mapvalue.Unmarshal(dAtA[iNdEx:postmsgIndex]); err != nil {
+						return err
+					}
+					iNdEx = postmsgIndex
+				} else {
+					iNdEx = entryPreIndex
+					skippy, err := skipRelationSvc(dAtA[iNdEx:])
+					if err != nil {
+						return err
+					}
+					if (skippy < 0) || (iNdEx+skippy) < 0 {
+						return ErrInvalidLengthRelationSvc
+					}
+					if (iNdEx + skippy) > postIndex {
+						return io.ErrUnexpectedEOF
+					}
+					iNdEx += skippy
+				}
+			}
+			m.RelationCount[mapkey] = mapvalue
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipRelationSvc(dAtA[iNdEx:])

@@ -12,9 +12,13 @@ import (
 )
 
 const (
-	relationCacheL2TTL    = time.Hour * 12
-	redisKeyHUserFollow   = "rla_fow_%d"
-	redisKeyHUserFollower = "rla_foe_%d"
+	relationCacheL2TTL     = time.Hour * 12
+	redisKeyHUserFollow    = "rla_fow_%d"
+	redisKeyHUserFollower  = "rla_foe_%d"
+	redisKeyHRelationCount = "lra_cnt_%d"
+
+	followField   = "follow"
+	followerField = "follower"
 )
 
 func getRelationCacheL2(ctx context.Context, keyPrefix string, uids []int64) (map[int64][]*model.FollowItem, []int64, error) {
@@ -65,9 +69,11 @@ func setRelationCacheL2(ctx context.Context, keyPrefix string, listMap map[int64
 	}
 }
 
-func addRelationCacheL2(ctx context.Context, keyPrefix string, uid int64, item *model.FollowItem) {
+func addRelationCacheL2(ctx context.Context, keyPrefix string, uid int64, list []*model.FollowItem) {
 	fieldMap := make(map[string]interface{}, 1)
-	fieldMap[cast.FormatInt(item.ToUid)] = item.CreateTime
+	for _, v := range list {
+		fieldMap[cast.FormatInt(v.ToUid)] = v.CreateTime
+	}
 	if err := rdx.HMSetXEX(ctx, fmt.Sprintf(keyPrefix, uid), fieldMap, relationCacheL2TTL); err != nil {
 		env.ExcLogger.Println()
 	}
@@ -79,10 +85,34 @@ func delRelationCacheL2(ctx context.Context, keyPrefix string, uid, touid int64)
 	}
 }
 
+func addRelationCount(ctx context.Context, uid, touid, incr int64) {
+	key := fmt.Sprintf(redisKeyHRelationCount, uid)
+	_ = rdx.HIncrByXEX(ctx, key, followField, incr, relationCacheL2TTL)
+	key = fmt.Sprintf(redisKeyHRelationCount, touid)
+	_ = rdx.HIncrByXEX(ctx, key, followerField, incr, relationCacheL2TTL)
+}
+
 func SetFollowList(ctx context.Context, uid int64, list []*model.FollowItem) {
 	listMap := map[int64]*model.FollowList{uid: {List: list}}
 	setRelationCacheL1(ctx, mcKeyUserFollow, listMap)
 	setRelationCacheL2(ctx, redisKeyHUserFollow, listMap)
+}
+
+func SetRelationCount(ctx context.Context, fm map[int64]*model.UserFollowCount) {
+	pipe := rdx.Pipeline()
+	for k, v := range fm {
+		key := fmt.Sprintf(redisKeyHRelationCount, k)
+		fieldMap := map[string]interface{}{
+			followField:   v.FollowCount,
+			followerField: v.FollowerCount,
+		}
+		pipe.HMSet(ctx, key, fieldMap)
+		pipe.Expire(ctx, key, relationCacheL2TTL)
+	}
+	_, err := pipe.Exec(ctx)
+	if err != nil {
+		env.ExcLogger.Println()
+	}
 }
 
 func IsFollows(ctx context.Context, uid int64, uids []int64) (map[int64]struct{}, error) {
@@ -118,4 +148,34 @@ func IsFollowers(ctx context.Context, uid int64, uids []int64) (map[int64]struct
 		}
 	}
 	return rm, missed, nil
+}
+
+func GetRelationCount(ctx context.Context, uids []int64) (map[int64]*model.UserFollowCount, []int64, error) {
+	pipe := rdx.Pipeline()
+	cmdMap := make(map[int64]*redis.StringStringMapCmd, len(uids))
+	for _, v := range uids {
+		key := fmt.Sprintf(redisKeyHRelationCount, v)
+		cmdMap[v] = pipe.HGetAll(ctx, key)
+	}
+	_, err := pipe.Exec(ctx)
+	if err != nil {
+		return nil, uids, err
+	}
+	missed := make([]int64, 0, len(uids))
+	fm := make(map[int64]*model.UserFollowCount, len(uids))
+	for k, v := range cmdMap {
+		val, err := v.Result()
+		if err != nil {
+			missed = append(missed, k)
+			continue
+		}
+		fc := &model.UserFollowCount{}
+		if c, ok := val[followField]; ok {
+			fc.FollowCount = cast.Atoi(c, 0)
+		}
+		if c, ok := val[followerField]; ok {
+			fc.FollowerCount = cast.Atoi(c, 0)
+		}
+	}
+	return fm, missed, nil
 }
