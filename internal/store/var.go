@@ -6,11 +6,11 @@ import (
 )
 
 var (
-	dbCli sqlbuilder.Database
+	sess sqlbuilder.Database
 )
 
 func InitStore(conf *config.MysqlConf) error {
 	var err error
-	dbCli, err = conf.InitDB()
+	sess, err = conf.InitDB()
 	return err
 }

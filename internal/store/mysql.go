@@ -16,7 +16,7 @@ const (
 )
 
 func Follow(ctx context.Context, uid, touid int64) error {
-	return dbCli.Tx(ctx, func(sess sqlbuilder.Tx) error {
+	return sess.Tx(ctx, func(sess sqlbuilder.Tx) error {
 		sql := "INSERT INTO %s (`uid`, `to_uid`) VALUES (?, ?)"
 		_, err := sess.Exec(fmt.Sprintf(sql, tableUserFollow), uid, touid)
 		if err != nil {
@@ -38,7 +38,7 @@ func Follow(ctx context.Context, uid, touid int64) error {
 }
 
 func Unfollow(ctx context.Context, uid, touid int64) error {
-	return dbCli.Tx(ctx, func(sess sqlbuilder.Tx) error {
+	return sess.Tx(ctx, func(sess sqlbuilder.Tx) error {
 		filter := db.Cond{"uid": uid, "to_uid": touid}
 		_, err := sess.DeleteFrom(tableUserFollow).Where(filter).Limit(1).Exec()
 		if err != nil {
@@ -63,7 +63,7 @@ func Unfollow(ctx context.Context, uid, touid int64) error {
 func GetAllUserFollow(ctx context.Context, uid int64) ([]*model.FollowItem, error) {
 	items := []*model.UserFollow{}
 	filter := db.Cond{"uid": uid}
-	err := dbCli.WithContext(ctx).Select("`to_uid`", "`create_time`").From(tableUserFollow).Where(filter).OrderBy("`create_time` DESC").All(&items)
+	err := sess.WithContext(ctx).Select("`to_uid`", "`create_time`").From(tableUserFollow).Where(filter).OrderBy("`create_time` DESC").All(&items)
 	return model.UfDAO2DTO(items), err
 }
 
@@ -72,7 +72,7 @@ func GetUserFollower(ctx context.Context, uid, lastid int64, limit int) ([]*mode
 	filter := db.Cond{"uid": uid}
 	if lastid != 0 {
 		sql := fmt.Sprintf("SELECT `id` FROM %s WHERE `uid` = ? AND `to_uid` = ? LIMIT 1", tableUserFollower)
-		row, err := dbCli.QueryRowContext(ctx, sql, uid, lastid)
+		row, err := sess.QueryRowContext(ctx, sql, uid, lastid)
 		if err != nil {
 			return model.UfDAO2DTO(items), err
 		}
@@ -83,14 +83,14 @@ func GetUserFollower(ctx context.Context, uid, lastid int64, limit int) ([]*mode
 		}
 		filter["id < "] = id
 	}
-	err := dbCli.WithContext(ctx).Select("`to_uid`", "`create_time`").From(tableUserFollower).Where(filter).OrderBy("`create_time` DESC").Limit(limit).All(items)
+	err := sess.WithContext(ctx).Select("`to_uid`", "`create_time`").From(tableUserFollower).Where(filter).OrderBy("`create_time` DESC").Limit(limit).All(items)
 	return model.UfDAO2DTO(items), err
 }
 
 func GetUsersFollowCount(ctx context.Context, uids []int64) (map[int64]*model.UserFollowCount, error) {
 	counts := []*model.UserFollowCount{}
 	filter := db.Cond{"uid IN": uids}
-	err := dbCli.WithContext(ctx).SelectFrom(tableUserFollowCount).Where(filter).All(&counts)
+	err := sess.WithContext(ctx).SelectFrom(tableUserFollowCount).Where(filter).All(&counts)
 	if err != nil {
 		return nil, err
 	}
