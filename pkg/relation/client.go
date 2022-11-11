@@ -41,5 +41,5 @@ func GetRelation(ctx context.Context, uid int64, uids []int64, source Source) (m
 
 func GetRelationCount(ctx context.Context, uids []int64, source Source) (map[int64]*CountItem, error) {
 	res, err := client.GetRelationCount(ctx, &CountRequest{Uids: uids, Source: source})
-	return CountDTO2DO(res), err
+	return countDTO2DO(res), err
 }

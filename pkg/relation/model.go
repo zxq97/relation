@@ -24,7 +24,7 @@ func listDTO2DO(val *ListResponse) []*ListItem {
 	return list
 }
 
-func CountDTO2DO(val *CountResponse) map[int64]*CountItem {
+func countDTO2DO(val *CountResponse) map[int64]*CountItem {
 	if val == nil || len(val.RelationCount) == 0 {
 		return nil
 	}
