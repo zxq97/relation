@@ -166,10 +166,8 @@ func getRelationList(ctx context.Context, uid, lastid, offset int64, follow bool
 func AddRelation(ctx context.Context, uid int64, item *model.FollowItem) {
 	addRelationCacheL1(ctx, mcKeyUserFollow, uid, []*model.FollowItem{item})
 	addRelationCacheL2(ctx, redisKeyHUserFollow, uid, []*model.FollowItem{item})
-	follower := item
-	tuid := follower.ToUid
-	follower.ToUid = uid
-	addRelationCacheL1(ctx, mcKeyUserFollower, tuid, []*model.FollowItem{follower})
+	uid, item.ToUid = item.ToUid, uid
+	addRelationCacheL1(ctx, mcKeyUserFollower, uid, []*model.FollowItem{item})
 	addRelationCount(ctx, uid, item.ToUid, 1)
 }
 
