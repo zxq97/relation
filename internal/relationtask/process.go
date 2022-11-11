@@ -7,6 +7,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/zxq97/gotool/kafka"
 	"github.com/zxq97/relation/internal/cache"
+	"github.com/zxq97/relation/internal/constant"
 	"github.com/zxq97/relation/internal/env"
 	"github.com/zxq97/relation/internal/model"
 	"github.com/zxq97/relation/internal/relationsvc"
@@ -47,7 +48,7 @@ func rebuild(ctx context.Context, kfkmsg *kafka.KafkaMessage) {
 	}
 	switch kfkmsg.EventType {
 	case kafka.EventTypeListMissed:
-		item, err := store.GetUserFollower(ctx, list.Uid, list.LastId, 100)
+		item, err := store.GetUserFollower(ctx, list.Uid, list.LastId, constant.ListRebuildSize)
 		if err != nil {
 			env.ExcLogger.Println()
 			return

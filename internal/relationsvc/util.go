@@ -55,3 +55,14 @@ func getUserFollow(ctx context.Context, uid int64) ([]*model.FollowItem, error) 
 	}
 	return list, nil
 }
+
+func fcDAO2DTO(m map[int64]*model.UserFollowCount) map[int64]*RelationCount {
+	rm := make(map[int64]*RelationCount, len(m))
+	for k, v := range m {
+		rm[k] = &RelationCount{
+			FollowCount:   int64(v.FollowCount),
+			FollowerCount: int64(v.FollowerCount),
+		}
+	}
+	return rm
+}

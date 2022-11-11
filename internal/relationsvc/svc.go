@@ -10,6 +10,7 @@ import (
 	"github.com/zxq97/gotool/concurrent"
 	"github.com/zxq97/gotool/kafka"
 	"github.com/zxq97/relation/internal/cache"
+	"github.com/zxq97/relation/internal/constant"
 	"github.com/zxq97/relation/internal/env"
 	"github.com/zxq97/relation/internal/model"
 	"github.com/zxq97/relation/internal/store"
@@ -63,7 +64,7 @@ func (RelationSvc) Unfollow(ctx context.Context, req *FollowRequest) (*EmptyResp
 
 func (RelationSvc) GetFollowList(ctx context.Context, req *ListRequest) (*model.FollowList, error) {
 	val, err, _ := sfg.Do(fmt.Sprintf(sfKeyGetFollowList, req.Uid), func() (interface{}, error) {
-		list, err := cache.GetFollowList(ctx, req.Uid, req.LastId, 20)
+		list, err := cache.GetFollowList(ctx, req.Uid, req.LastId, constant.ListBatchSize)
 		if err != nil {
 			list, err = store.GetAllUserFollow(ctx, req.Uid)
 			if err != nil {
@@ -77,7 +78,7 @@ func (RelationSvc) GetFollowList(ctx context.Context, req *ListRequest) (*model.
 					return list[i].ToUid == req.LastId
 				})
 				if idx != len(list) {
-					right := idx + 20
+					right := idx + constant.ListBatchSize
 					if right > len(list) {
 						right = len(list)
 					}
@@ -96,9 +97,9 @@ func (RelationSvc) GetFollowList(ctx context.Context, req *ListRequest) (*model.
 
 func (RelationSvc) GetFollowerList(ctx context.Context, req *ListRequest) (*model.FollowList, error) {
 	val, err, _ := sfg.Do(fmt.Sprintf(sfKeyGetFollowerList, req.Uid), func() (interface{}, error) {
-		list, err := cache.GetFollowerList(ctx, req.Uid, req.LastId, 20)
+		list, err := cache.GetFollowerList(ctx, req.Uid, req.LastId, constant.ListBatchSize)
 		if err != nil {
-			list, err = store.GetUserFollower(ctx, req.Uid, req.LastId, 20)
+			list, err = store.GetUserFollower(ctx, req.Uid, req.LastId, constant.ListBatchSize)
 			if err != nil {
 				return nil, nil
 			}
@@ -184,5 +185,5 @@ func (RelationSvc) GetRelationCount(ctx context.Context, req *CountRequest) (*Co
 		}
 		cache.SetRelationCount(ctx, dbm)
 	}
-	return &CountResponse{RelationCount: model.FcDAO2DTO(fm)}, nil
+	return &CountResponse{RelationCount: fcDAO2DTO(fm)}, nil
 }

@@ -1,7 +1,6 @@
 package relationsvc
 
 import (
-	"context"
 	"github.com/zxq97/gotool/config"
 )
 
