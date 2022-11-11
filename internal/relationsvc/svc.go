@@ -126,13 +126,13 @@ func (RelationSvc) GetRelation(ctx context.Context, req *RelationRequest) (*Rela
 		if err != nil {
 			return &RelationResponse{}, nil
 		}
-		m := make(map[int64]struct{})
+		m := make(map[int64]int64, len(list))
 		for _, v := range list {
-			m[v.ToUid] = struct{}{}
+			m[v.ToUid] = v.CreateTime
 		}
 		for _, v := range req.Uids {
-			if _, ok := m[v]; ok {
-				followMap[v] = struct{}{}
+			if t, ok := m[v]; ok {
+				followMap[v] = t
 			}
 		}
 	}
@@ -149,19 +149,21 @@ func (RelationSvc) GetRelation(ctx context.Context, req *RelationRequest) (*Rela
 				for _, u := range list {
 					if u.ToUid == v {
 						lock.Lock()
-						followerMap[v] = struct{}{}
+						followerMap[v] = u.CreateTime
 						lock.Unlock()
 					}
 				}
 			})
 		}
 	}
-	relationMap := make(map[int64]int32, len(req.Uids))
-	for k := range followMap {
-		relationMap[k] |= 1
+	relationMap := make(map[int64]*RelationItem, len(req.Uids))
+	for k, v := range followMap {
+		relationMap[k].Relation |= 1
+		relationMap[k].FollowTime = v
 	}
-	for k := range followerMap {
-		relationMap[k] |= 2
+	for k, v := range followerMap {
+		relationMap[k].Relation |= 2
+		relationMap[k].FollowedTime = v
 	}
 	return &RelationResponse{Rm: relationMap}, nil
 }

@@ -34,9 +34,9 @@ func GetFollowerList(ctx context.Context, uid, lastid int64, source Source) ([]*
 	return listDTO2DO(res), err
 }
 
-func GetRelation(ctx context.Context, uid int64, uids []int64, source Source) (map[int64]int32, error) {
+func GetRelation(ctx context.Context, uid int64, uids []int64, source Source) (map[int64]*RItem, error) {
 	res, err := client.GetRelation(ctx, &RelationRequest{Uid: uid, Uids: uids, Source: source})
-	return res.Rm, err
+	return itemDTO2DO(res), err
 }
 
 func GetRelationCount(ctx context.Context, uids []int64, source Source) (map[int64]*CountItem, error) {

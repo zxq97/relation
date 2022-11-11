@@ -115,7 +115,7 @@ func SetRelationCount(ctx context.Context, fm map[int64]*model.UserFollowCount) 
 	}
 }
 
-func IsFollows(ctx context.Context, uid int64, uids []int64) (map[int64]struct{}, error) {
+func IsFollows(ctx context.Context, uid int64, uids []int64) (map[int64]int64, error) {
 	key := fmt.Sprintf(redisKeyHUserFollow, uid)
 	us := make([]string, len(uids))
 	for k, v := range uids {
@@ -125,18 +125,19 @@ func IsFollows(ctx context.Context, uid int64, uids []int64) (map[int64]struct{}
 	if err != nil {
 		return nil, err
 	}
-	rm := make(map[int64]struct{}, len(uids))
+	rm := make(map[int64]int64, len(uids))
 	for k, v := range val {
-		if v != nil {
-			rm[uids[k]] = struct{}{}
+		c, ok := v.(string)
+		if v != nil && ok {
+			rm[uids[k]] = cast.ParseInt(c, 0)
 		}
 	}
 	return rm, nil
 }
 
-func IsFollowers(ctx context.Context, uid int64, uids []int64) (map[int64]struct{}, []int64, error) {
+func IsFollowers(ctx context.Context, uid int64, uids []int64) (map[int64]int64, []int64, error) {
 	missed := make([]int64, 0, len(uids))
-	rm := make(map[int64]struct{}, len(uids))
+	rm := make(map[int64]int64, len(uids))
 	for _, v := range uids {
 		key := fmt.Sprintf(redisKeyHUserFollower, v)
 		val, err := rdx.HMGetXEX(ctx, key, relationCacheL2TTL, cast.FormatInt(uid))
@@ -144,7 +145,12 @@ func IsFollowers(ctx context.Context, uid int64, uids []int64) (map[int64]struct
 			missed = append(missed, v)
 			continue
 		} else if val != nil {
-			rm[v] = struct{}{}
+			c, ok := val[0].(string)
+			if ok {
+				rm[v] = cast.ParseInt(c, 0)
+			} else {
+				missed = append(missed, v)
+			}
 		}
 	}
 	return rm, missed, nil

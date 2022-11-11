@@ -22,8 +22,14 @@ message RelationRequest {
   Source source = 3;
 }
 
+message RelationItem {
+  int32 relation = 1;
+  int64 follow_time = 2;
+  int64 followed_time = 3;
+}
+
 message RelationResponse {
-  map<int64, int32> rm = 1;
+  map<int64, RelationItem> rm = 1;
 }
 
 message ListRequest {

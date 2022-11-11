@@ -38,5 +38,11 @@ func translateRelation(val *relationsvc.RelationResponse) *relation.RelationResp
 	if val == nil {
 		return nil
 	}
-	return &relation.RelationResponse{Rm: val.Rm}
+	m := make(map[int64]*relation.RelationItem, len(val.Rm))
+	for k, v := range val.Rm {
+		m[k].Relation = v.Relation
+		m[k].FollowTime = v.FollowTime
+		m[k].FollowedTime = v.FollowedTime
+	}
+	return &relation.RelationResponse{Rm: m}
 }

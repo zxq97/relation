@@ -10,6 +10,12 @@ type CountItem struct {
 	FollowerCount int64 `json:"follower_count"`
 }
 
+type RItem struct {
+	Relation     int32 `json:"relation"`
+	FollowTime   int64 `json:"follow_time"`
+	FollowedTime int64 `json:"followed_time"`
+}
+
 func listDTO2DO(val *ListResponse) []*ListItem {
 	if val == nil || len(val.ItemList) == 0 {
 		return nil
@@ -33,6 +39,21 @@ func countDTO2DO(val *CountResponse) map[int64]*CountItem {
 		m[k] = &CountItem{
 			FollowCount:   v.FollowCount,
 			FollowerCount: v.FollowerCount,
+		}
+	}
+	return m
+}
+
+func itemDTO2DO(val *RelationResponse) map[int64]*RItem {
+	if val == nil || len(val.Rm) == 0 {
+		return nil
+	}
+	m := make(map[int64]*RItem, len(val.Rm))
+	for k, v := range val.Rm {
+		m[k] = &RItem{
+			Relation:     v.Relation,
+			FollowTime:   v.FollowTime,
+			FollowedTime: v.FollowedTime,
 		}
 	}
 	return m
