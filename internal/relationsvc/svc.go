@@ -44,6 +44,7 @@ func InitRelationSvc(conf *RelationSvcConfig) error {
 	return err
 }
 
+//Follow 关注
 func (RelationSvc) Follow(ctx context.Context, req *FollowRequest) (*EmptyResponse, error) {
 	bs, err := packKafkaMsg(ctx, req, kafka.EventTypeCreate)
 	if err != nil {
@@ -53,6 +54,7 @@ func (RelationSvc) Follow(ctx context.Context, req *FollowRequest) (*EmptyRespon
 	return &EmptyResponse{}, producer.SendMessage(kafka.TopicRelationFollow, []byte(shardKey), bs)
 }
 
+//Unfollow 取关
 func (RelationSvc) Unfollow(ctx context.Context, req *FollowRequest) (*EmptyResponse, error) {
 	bs, err := packKafkaMsg(ctx, req, kafka.EventTypeDelete)
 	if err != nil {
@@ -62,6 +64,7 @@ func (RelationSvc) Unfollow(ctx context.Context, req *FollowRequest) (*EmptyResp
 	return &EmptyResponse{}, producer.SendMessage(kafka.TopicRelationOperator, []byte(shardKey), bs)
 }
 
+//GetFollowList 关注列表
 func (RelationSvc) GetFollowList(ctx context.Context, req *ListRequest) (*model.FollowList, error) {
 	val, err, _ := sfg.Do(fmt.Sprintf(sfKeyGetFollowList, req.Uid), func() (interface{}, error) {
 		list, err := cache.GetFollowList(ctx, req.Uid, req.LastId, constant.ListBatchSize)
@@ -95,6 +98,7 @@ func (RelationSvc) GetFollowList(ctx context.Context, req *ListRequest) (*model.
 	return &model.FollowList{List: res.List}, nil
 }
 
+//GetFollowerList 粉丝列表
 func (RelationSvc) GetFollowerList(ctx context.Context, req *ListRequest) (*model.FollowList, error) {
 	val, err, _ := sfg.Do(fmt.Sprintf(sfKeyGetFollowerList, req.Uid), func() (interface{}, error) {
 		list, err := cache.GetFollowerList(ctx, req.Uid, req.LastId, constant.ListBatchSize)
@@ -119,6 +123,7 @@ func (RelationSvc) GetFollowerList(ctx context.Context, req *ListRequest) (*mode
 	return &model.FollowList{List: res.List}, nil
 }
 
+//GetRelation 好有关系
 func (RelationSvc) GetRelation(ctx context.Context, req *RelationRequest) (*RelationResponse, error) {
 	followMap, err := cache.IsFollows(ctx, req.Uid, req.Uids)
 	if err != nil {
@@ -168,6 +173,7 @@ func (RelationSvc) GetRelation(ctx context.Context, req *RelationRequest) (*Rela
 	return &RelationResponse{Rm: relationMap}, nil
 }
 
+//GetRelationCount 关注 粉丝 数量
 func (RelationSvc) GetRelationCount(ctx context.Context, req *CountRequest) (*CountResponse, error) {
 	fm, missed, err := cache.GetRelationCount(ctx, req.Uids)
 	if err != nil || len(missed) > 0 {

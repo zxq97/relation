@@ -4,13 +4,10 @@ import (
 	"context"
 	"fmt"
 	"sort"
-	"strings"
 
 	"github.com/golang/protobuf/proto"
-	"github.com/zxq97/gotool/cast"
 	"github.com/zxq97/gotool/concurrent"
 	"github.com/zxq97/relation/internal/constant"
-	"github.com/zxq97/relation/internal/env"
 	"github.com/zxq97/relation/internal/model"
 )
 
@@ -20,93 +17,63 @@ const (
 	mcKeyUserFollower  = "rla_foe_%d" // uid
 )
 
-func getRelationCacheL1(ctx context.Context, keyPrefix string, uids []int64) (map[int64][]*model.FollowItem, []int64, error) {
-	keys := make([]string, len(uids))
-	for k, v := range uids {
-		keys[k] = fmt.Sprintf(keyPrefix, v)
-	}
-	val, err := mcx.GetMultiCtx(ctx, keys)
-	if err != nil {
-		return nil, nil, err
-	}
-	itemMap := make(map[int64][]*model.FollowItem, len(uids))
-	for k, v := range val {
-		list := &model.FollowList{}
-		err = proto.Unmarshal(v.Value, list)
-		if err != nil {
-			env.ExcLogger.Println()
-			continue
-		}
-		s := strings.Split(k, "_")
-		if len(s) == 0 {
-			env.ExcLogger.Println()
-			continue
-		}
-		itemMap[cast.ParseInt(s[len(s)-1], 0)] = list.List
-	}
-	missed := make([]int64, 0, len(uids))
-	for _, k := range uids {
-		if _, ok := itemMap[k]; !ok {
-			missed = append(missed, k)
-		}
-	}
-	return itemMap, missed, nil
-}
-
-func setRelationCacheL1(ctx context.Context, keyPrefix string, listMap map[int64]*model.FollowList) {
-	for k, v := range listMap {
-		key := fmt.Sprintf(keyPrefix, k)
-		bs, err := proto.Marshal(v)
-		if err != nil {
-			env.ExcLogger.Println()
-			continue
-		}
-		err = mcx.SetCtx(ctx, key, bs, relationCacheL1TTL)
-		if err != nil {
-			env.ExcLogger.Println()
-		}
-	}
-}
-
-func addRelationCacheL1(ctx context.Context, keyPrefix string, uid int64, itemList []*model.FollowItem) {
+func getRelationCacheL1(ctx context.Context, keyPrefix string, uid int64) ([]*model.FollowItem, error) {
 	key := fmt.Sprintf(keyPrefix, uid)
 	val, err := mcx.GetCtx(ctx, key)
 	if err != nil {
-		env.ExcLogger.Println()
-		return
+		return nil, err
+	}
+	list := &model.FollowList{}
+	err = proto.Unmarshal(val.Value, list)
+	if err != nil {
+		return nil, err
+	}
+	return list.List, nil
+}
+
+func setRelationCacheL1(ctx context.Context, keyPrefix string, uid int64, list []*model.FollowItem) error {
+	val := &model.FollowList{List: list}
+	key := fmt.Sprintf(keyPrefix, uid)
+	bs, err := proto.Marshal(val)
+	if err != nil {
+		return err
+	}
+	err = mcx.SetCtx(ctx, key, bs, relationCacheL1TTL)
+	return err
+}
+
+func addRelationCacheL1(ctx context.Context, keyPrefix string, uid int64, itemList []*model.FollowItem) error {
+	key := fmt.Sprintf(keyPrefix, uid)
+	val, err := mcx.GetCtx(ctx, key)
+	if err != nil {
+		return err
 	}
 	list := model.FollowList{}
 	err = proto.Unmarshal(val.Value, &list)
 	if err != nil {
-		env.ExcLogger.Println()
-		return
+		return err
 	}
 	for _, v := range itemList {
 		list.List = append(list.List, v)
 	}
 	bs, err := proto.Marshal(&list)
 	if err != nil {
-		env.ExcLogger.Println()
-		return
+		return err
 	}
 	err = mcx.SetCtx(ctx, key, bs, relationCacheL1TTL)
-	if err != nil {
-		env.ExcLogger.Println()
-	}
+	return err
 }
 
-func delRelationCacheL1(ctx context.Context, keyPrefix string, uid, touid int64) {
+func delRelationCacheL1(ctx context.Context, keyPrefix string, uid, touid int64) error {
 	key := fmt.Sprintf(keyPrefix, uid)
 	val, err := mcx.GetCtx(ctx, key)
 	if err != nil {
-		env.ExcLogger.Println()
-		return
+		return err
 	}
 	list := model.FollowList{}
 	err = proto.Unmarshal(val.Value, &list)
 	if err != nil {
-		env.ExcLogger.Println()
-		return
+		return err
 	}
 	for k, v := range list.List {
 		if v.ToUid == touid {
@@ -115,13 +82,9 @@ func delRelationCacheL1(ctx context.Context, keyPrefix string, uid, touid int64)
 	}
 	bs, err := proto.Marshal(&list)
 	if err != nil {
-		env.ExcLogger.Println()
-		return
+		return err
 	}
-	err = mcx.SetCtx(ctx, key, bs, relationCacheL1TTL)
-	if err != nil {
-		env.ExcLogger.Println()
-	}
+	return mcx.SetCtx(ctx, key, bs, relationCacheL1TTL)
 }
 
 func getRelationList(ctx context.Context, uid, lastid, offset int64, follow bool) ([]*model.FollowItem, error) {
@@ -129,22 +92,18 @@ func getRelationList(ctx context.Context, uid, lastid, offset int64, follow bool
 	redisKey := redisKeyHUserFollow
 	if !follow {
 		mcKey = mcKeyUserFollower
-		redisKey = redisKeyHUserFollower
 	}
-	listMap, _, err := getRelationCacheL1(ctx, mcKey, []int64{uid})
-	list, ok := listMap[uid]
-	if err != nil || !ok {
-		listMap, _, err = getRelationCacheL2(ctx, redisKey, []int64{uid})
-		list, ok = listMap[uid]
-		if err != nil || !ok {
+	list, err := getRelationCacheL1(ctx, mcKey, uid)
+	if err != nil {
+		if !follow {
+			return nil, err
+		}
+		list, err = getRelationCacheL2(ctx, redisKey, uid)
+		if err != nil {
 			return nil, err
 		}
 		concurrent.Go(func() {
-			if follow {
-				setRelationCacheL1(context.TODO(), mcKey, map[int64]*model.FollowList{uid: {List: list}})
-			} else {
-				addRelationCacheL1(context.TODO(), mcKey, uid, list)
-			}
+			_ = setRelationCacheL1(context.TODO(), mcKey, uid, list)
 		})
 	}
 	sort.Slice(list, func(i, j int) bool {
@@ -164,21 +123,21 @@ func getRelationList(ctx context.Context, uid, lastid, offset int64, follow bool
 }
 
 func AddRelation(ctx context.Context, uid int64, item *model.FollowItem) {
-	addRelationCacheL1(ctx, mcKeyUserFollow, uid, []*model.FollowItem{item})
-	addRelationCacheL2(ctx, redisKeyHUserFollow, uid, []*model.FollowItem{item})
+	_ = addRelationCacheL1(ctx, mcKeyUserFollow, uid, []*model.FollowItem{item})
+	_ = addRelationCacheL2(ctx, redisKeyHUserFollow, uid, []*model.FollowItem{item})
 	uid, item.ToUid = item.ToUid, uid
-	addRelationCacheL1(ctx, mcKeyUserFollower, uid, []*model.FollowItem{item})
+	_ = addRelationCacheL1(ctx, mcKeyUserFollower, uid, []*model.FollowItem{item})
 	addRelationCount(ctx, uid, item.ToUid, 1)
 }
 
 func AddUserFollower(ctx context.Context, uid int64, list []*model.FollowItem) {
-	addRelationCacheL1(ctx, mcKeyUserFollower, uid, list)
+	_ = addRelationCacheL1(ctx, mcKeyUserFollower, uid, list)
 }
 
 func DelRelation(ctx context.Context, uid, touid int64) {
-	delRelationCacheL1(ctx, mcKeyUserFollow, uid, touid)
-	delRelationCacheL1(ctx, mcKeyUserFollower, touid, uid)
-	delRelationCacheL2(ctx, redisKeyHUserFollow, uid, touid)
+	_ = delRelationCacheL1(ctx, mcKeyUserFollow, uid, touid)
+	_ = delRelationCacheL1(ctx, mcKeyUserFollower, touid, uid)
+	_ = delRelationCacheL2(ctx, redisKeyHUserFollow, uid, touid)
 	addRelationCount(ctx, uid, touid, -1)
 }
 
