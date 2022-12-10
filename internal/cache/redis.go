@@ -13,15 +13,16 @@ import (
 
 const (
 	relationCacheL2TTL     = time.Hour * 12
-	redisKeyHUserFollow    = "rla_fow_%d"
-	redisKeyHRelationCount = "lra_cnt_%d"
+	redisKeyHUserFollow    = "rla_fow_%d" // uid
+	redisKeyHRelationCount = "lra_cnt_%d" // uid
+	redisKeyZUserFollower  = "rla_foe_%d" // uid
 
 	followField   = "follow"
 	followerField = "follower"
 )
 
-func getRelationCacheL2(ctx context.Context, keyPrefix string, uid int64) ([]*model.FollowItem, error) {
-	key := fmt.Sprintf(keyPrefix, uid)
+func getFollowCacheL2(ctx context.Context, uid int64) ([]*model.FollowItem, error) {
+	key := fmt.Sprintf(redisKeyHUserFollow, uid)
 	val, err := rdx.HGetAll(ctx, key).Result()
 	if err != nil {
 		return nil, err
@@ -38,25 +39,35 @@ func getRelationCacheL2(ctx context.Context, keyPrefix string, uid int64) ([]*mo
 	return list, nil
 }
 
-func setRelationCacheL2(ctx context.Context, keyPrefix string, uid int64, list []*model.FollowItem) error {
+func setFollowCacheL2(ctx context.Context, uid int64, list []*model.FollowItem) error {
 	field := make(map[string]interface{}, len(list))
 	for _, v := range list {
 		field[cast.FormatInt(v.ToUid)] = v.CreateTime
 	}
-	key := fmt.Sprintf(keyPrefix, uid)
+	key := fmt.Sprintf(redisKeyHUserFollow, uid)
 	return rdx.HMSetEX(ctx, key, field, relationCacheL2TTL)
 }
 
-func addRelationCacheL2(ctx context.Context, keyPrefix string, uid int64, list []*model.FollowItem) error {
+func addFollowCacheL2(ctx context.Context, uid int64, list []*model.FollowItem) error {
 	fieldMap := make(map[string]interface{}, len(list))
 	for _, v := range list {
 		fieldMap[cast.FormatInt(v.ToUid)] = v.CreateTime
 	}
-	return rdx.HMSetXEX(ctx, fmt.Sprintf(keyPrefix, uid), fieldMap, relationCacheL2TTL)
+	return rdx.HMSetXEX(ctx, fmt.Sprintf(redisKeyHUserFollow, uid), fieldMap, relationCacheL2TTL)
 }
 
-func delRelationCacheL2(ctx context.Context, keyPrefix string, uid, touid int64) error {
-	return rdx.HDel(ctx, fmt.Sprintf(keyPrefix, uid), cast.FormatInt(touid)).Err()
+func delFollowCacheL2(ctx context.Context, uid, touid int64) error {
+	return rdx.HDel(ctx, fmt.Sprintf(redisKeyHUserFollow, uid), cast.FormatInt(touid)).Err()
+}
+
+func addFollower(ctx context.Context, uid int64, item *model.FollowItem) error {
+	key := fmt.Sprintf(redisKeyZUserFollower, item.ToUid)
+	return rdx.ZAddXEX(ctx, key, []*redis.Z{{Member: uid, Score: float64(item.CreateTime)}}, time.Hour)
+}
+
+func delFollower(ctx context.Context, uid, touid int64) error {
+	key := fmt.Sprintf(redisKeyZUserFollower, touid)
+	return rdx.ZRem(ctx, key, uid).Err()
 }
 
 func addRelationCount(ctx context.Context, uid, touid, incr int64) {
@@ -66,9 +77,21 @@ func addRelationCount(ctx context.Context, uid, touid, incr int64) {
 	_ = rdx.HIncrByXEX(ctx, key, followerField, incr, relationCacheL2TTL)
 }
 
+func AddUserFollower(ctx context.Context, uid int64, list []*model.FollowItem) error {
+	key := fmt.Sprintf(redisKeyZUserFollower, uid)
+	zs := make([]*redis.Z, len(list))
+	for k, v := range list {
+		zs[k] = &redis.Z{
+			Member: v.ToUid,
+			Score:  float64(v.ToUid),
+		}
+	}
+	return rdx.ZAddXEX(ctx, key, zs, time.Hour)
+}
+
 func SetFollowList(ctx context.Context, uid int64, list []*model.FollowItem) {
-	_ = setRelationCacheL1(ctx, mcKeyUserFollow, uid, list)
-	_ = setRelationCacheL2(ctx, redisKeyHUserFollow, uid, list)
+	_ = setFollowCacheL1(ctx, uid, list)
+	_ = setFollowCacheL2(ctx, uid, list)
 }
 
 func SetRelationCount(ctx context.Context, fm map[int64]*model.UserFollowCount) {

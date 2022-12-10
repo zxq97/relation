@@ -1,4 +1,4 @@
-package relationbff
+package relation
 
 import "errors"
 

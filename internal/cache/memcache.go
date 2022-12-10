@@ -5,35 +5,60 @@ import (
 	"fmt"
 	"sort"
 
+	"github.com/bradfitz/gomemcache/memcache"
 	"github.com/golang/protobuf/proto"
+	"github.com/pkg/errors"
 	"github.com/zxq97/gotool/concurrent"
-	"github.com/zxq97/relation/internal/constant"
 	"github.com/zxq97/relation/internal/model"
 )
 
 const (
 	relationCacheL1TTL = 8 * 3600
 	mcKeyUserFollow    = "rla_fow_%d" // uid
-	mcKeyUserFollower  = "rla_foe_%d" // uid
 )
 
-func getRelationCacheL1(ctx context.Context, keyPrefix string, uid int64) ([]*model.FollowItem, error) {
-	key := fmt.Sprintf(keyPrefix, uid)
-	val, err := mcx.GetCtx(ctx, key)
-	if err != nil {
-		return nil, err
+func getFollowsCacheL1(ctx context.Context, uids []int64) (map[int64][]*model.FollowItem, []int64, error) {
+	keys := make([]string, len(uids))
+	for k, v := range uids {
+		keys[k] = fmt.Sprintf(mcKeyUserFollow, v)
 	}
-	list := &model.FollowList{}
-	err = proto.Unmarshal(val.Value, list)
+	val, err := mcx.GetMultiCtx(ctx, keys)
 	if err != nil {
-		return nil, err
+		return nil, nil, errors.Wrap(err, "mc get users follow")
 	}
-	return list.List, nil
+	m := make(map[int64][]*model.FollowItem, len(uids))
+	missed := make([]int64, 0, len(uids))
+	for i, k := range keys {
+		if v, ok := val[k]; ok {
+			list := &model.FollowList{}
+			err = proto.Unmarshal(v.Value, list)
+			if err != nil {
+				missed = append(missed, uids[i])
+				continue
+			}
+			m[uids[i]] = list.List
+		} else {
+			missed = append(missed, uids[i])
+		}
+	}
+	return m, missed, nil
 }
 
-func setRelationCacheL1(ctx context.Context, keyPrefix string, uid int64, list []*model.FollowItem) error {
+func getFollowCacheL1(ctx context.Context, uid int64) ([]*model.FollowItem, error) {
+	m, _, err := getFollowsCacheL1(ctx, []int64{uid})
+	if err != nil {
+		return nil, err
+	}
+	list, ok := m[uid]
+	if !ok {
+		return nil, memcache.ErrCacheMiss
+	}
+	return list, nil
+}
+
+func setFollowCacheL1(ctx context.Context, uid int64, list []*model.FollowItem) error {
 	val := &model.FollowList{List: list}
-	key := fmt.Sprintf(keyPrefix, uid)
+	key := fmt.Sprintf(mcKeyUserFollow, uid)
 	bs, err := proto.Marshal(val)
 	if err != nil {
 		return err
@@ -42,8 +67,8 @@ func setRelationCacheL1(ctx context.Context, keyPrefix string, uid int64, list [
 	return err
 }
 
-func addRelationCacheL1(ctx context.Context, keyPrefix string, uid int64, itemList []*model.FollowItem) error {
-	key := fmt.Sprintf(keyPrefix, uid)
+func addFollowCacheL1(ctx context.Context, uid int64, itemList []*model.FollowItem) error {
+	key := fmt.Sprintf(mcKeyUserFollow, uid)
 	val, err := mcx.GetCtx(ctx, key)
 	if err != nil {
 		return err
@@ -60,12 +85,12 @@ func addRelationCacheL1(ctx context.Context, keyPrefix string, uid int64, itemLi
 	if err != nil {
 		return err
 	}
-	err = mcx.SetCtx(ctx, key, bs, relationCacheL1TTL)
-	return err
+	val.Value = bs
+	return mcx.CompareAndSwap(val)
 }
 
-func delRelationCacheL1(ctx context.Context, keyPrefix string, uid, touid int64) error {
-	key := fmt.Sprintf(keyPrefix, uid)
+func delFollowCacheL1(ctx context.Context, uid, touid int64) error {
+	key := fmt.Sprintf(mcKeyUserFollow, uid)
 	val, err := mcx.GetCtx(ctx, key)
 	if err != nil {
 		return err
@@ -75,35 +100,48 @@ func delRelationCacheL1(ctx context.Context, keyPrefix string, uid, touid int64)
 	if err != nil {
 		return err
 	}
+	var flag bool
 	for k, v := range list.List {
 		if v.ToUid == touid {
 			list.List = append(list.List[0:k], list.List[k:]...)
+			flag = true
+			break
 		}
+	}
+	if !flag {
+		return nil
 	}
 	bs, err := proto.Marshal(&list)
 	if err != nil {
 		return err
 	}
-	return mcx.SetCtx(ctx, key, bs, relationCacheL1TTL)
+	val.Value = bs
+	return mcx.CompareAndSwap(val)
 }
 
-func getRelationList(ctx context.Context, uid, lastid, offset int64, follow bool) ([]*model.FollowItem, error) {
-	mcKey := mcKeyUserFollow
-	redisKey := redisKeyHUserFollow
-	if !follow {
-		mcKey = mcKeyUserFollower
-	}
-	list, err := getRelationCacheL1(ctx, mcKey, uid)
+func AddRelation(ctx context.Context, uid int64, item *model.FollowItem) {
+	_ = addFollowCacheL1(ctx, uid, []*model.FollowItem{item})
+	_ = addFollowCacheL2(ctx, uid, []*model.FollowItem{item})
+	_ = addFollower(ctx, uid, item)
+	addRelationCount(ctx, uid, item.ToUid, 1)
+}
+
+func DelRelation(ctx context.Context, uid, touid int64) {
+	_ = delFollowCacheL1(ctx, uid, touid)
+	_ = delFollowCacheL2(ctx, uid, touid)
+	_ = delFollower(ctx, uid, touid)
+	addRelationCount(ctx, uid, touid, -1)
+}
+
+func GetFollowList(ctx context.Context, uid, lastid, offset int64) ([]*model.FollowItem, error) {
+	list, err := getFollowCacheL1(ctx, uid)
 	if err != nil {
-		if !follow {
-			return nil, err
-		}
-		list, err = getRelationCacheL2(ctx, redisKey, uid)
+		list, err = getFollowCacheL2(ctx, uid)
 		if err != nil {
 			return nil, err
 		}
 		concurrent.Go(func() {
-			_ = setRelationCacheL1(context.TODO(), mcKey, uid, list)
+			_ = setFollowCacheL1(context.TODO(), uid, list)
 		})
 	}
 	sort.Slice(list, func(i, j int) bool {
@@ -122,33 +160,22 @@ func getRelationList(ctx context.Context, uid, lastid, offset int64, follow bool
 	return list[idx+1 : right], nil
 }
 
-func AddRelation(ctx context.Context, uid int64, item *model.FollowItem) {
-	_ = addRelationCacheL1(ctx, mcKeyUserFollow, uid, []*model.FollowItem{item})
-	_ = addRelationCacheL2(ctx, redisKeyHUserFollow, uid, []*model.FollowItem{item})
-	uid, item.ToUid = item.ToUid, uid
-	_ = addRelationCacheL1(ctx, mcKeyUserFollower, uid, []*model.FollowItem{item})
-	addRelationCount(ctx, uid, item.ToUid, 1)
-}
-
-func AddUserFollower(ctx context.Context, uid int64, list []*model.FollowItem) {
-	_ = addRelationCacheL1(ctx, mcKeyUserFollower, uid, list)
-}
-
-func DelRelation(ctx context.Context, uid, touid int64) {
-	_ = delRelationCacheL1(ctx, mcKeyUserFollow, uid, touid)
-	_ = delRelationCacheL1(ctx, mcKeyUserFollower, touid, uid)
-	_ = delRelationCacheL2(ctx, redisKeyHUserFollow, uid, touid)
-	addRelationCount(ctx, uid, touid, -1)
-}
-
-func GetFollowList(ctx context.Context, uid, lastid, offset int64) ([]*model.FollowItem, error) {
-	return getRelationList(ctx, uid, lastid, offset, true)
-}
-
 func GetFollowerList(ctx context.Context, uid, lastid, offset int64) ([]*model.FollowItem, error) {
-	list, err := getRelationList(ctx, uid, lastid, offset, false)
-	if len(list) >= constant.ShowFollowerLimit {
-		return nil, nil
+	key := fmt.Sprintf(redisKeyZUserFollower, uid)
+	zs, err := rdx.ZRevRangeByMemberWithScores(ctx, key, lastid, offset)
+	if err != nil {
+		return nil, err
 	}
-	return list, err
+	list := make([]*model.FollowItem, len(zs))
+	for k, z := range zs {
+		list[k] = &model.FollowItem{
+			ToUid:      z.Member.(int64),
+			CreateTime: int64(z.Score),
+		}
+	}
+	return list, nil
+}
+
+func GetUsersFollow(ctx context.Context, uids []int64) (map[int64][]*model.FollowItem, []int64, error) {
+	return getFollowsCacheL1(ctx, uids)
 }

@@ -61,6 +61,10 @@ message CountResponse {
   map<int64, RelationCount> relation_count = 1;
 }
 
+message BatchResponse {
+  repeated int64 uids = 1;
+}
+
 service Relation {
   rpc Follow(FollowRequest) returns (EmptyResponse);
   rpc Unfollow(FollowRequest) returns (EmptyResponse);
@@ -68,4 +72,6 @@ service Relation {
   rpc GetFollowerList(ListRequest) returns (ListResponse);
   rpc GetRelation(RelationRequest) returns (RelationResponse);
   rpc GetRelationCount(CountRequest) returns (CountResponse);
+  rpc GetCommonRelation(FollowRequest) returns (BatchResponse);
+  rpc GetRelationChain(FollowRequest) returns (BatchResponse);
 }

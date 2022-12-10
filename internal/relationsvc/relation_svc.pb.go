@@ -341,25 +341,25 @@ func (m *ListRequest) GetLastId() int64 {
 	return 0
 }
 
-type CountRequest struct {
+type BatchRequest struct {
 	Uids                 []int64  `protobuf:"varint,1,rep,packed,name=uids,proto3" json:"uids,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *CountRequest) Reset()         { *m = CountRequest{} }
-func (m *CountRequest) String() string { return proto.CompactTextString(m) }
-func (*CountRequest) ProtoMessage()    {}
-func (*CountRequest) Descriptor() ([]byte, []int) {
+func (m *BatchRequest) Reset()         { *m = BatchRequest{} }
+func (m *BatchRequest) String() string { return proto.CompactTextString(m) }
+func (*BatchRequest) ProtoMessage()    {}
+func (*BatchRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_d3247fba2014e40f, []int{6}
 }
-func (m *CountRequest) XXX_Unmarshal(b []byte) error {
+func (m *BatchRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *CountRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *BatchRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_CountRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_BatchRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -369,19 +369,19 @@ func (m *CountRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error)
 		return b[:n], nil
 	}
 }
-func (m *CountRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_CountRequest.Merge(m, src)
+func (m *BatchRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_BatchRequest.Merge(m, src)
 }
-func (m *CountRequest) XXX_Size() int {
+func (m *BatchRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *CountRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_CountRequest.DiscardUnknown(m)
+func (m *BatchRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_BatchRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_CountRequest proto.InternalMessageInfo
+var xxx_messageInfo_BatchRequest proto.InternalMessageInfo
 
-func (m *CountRequest) GetUids() []int64 {
+func (m *BatchRequest) GetUids() []int64 {
 	if m != nil {
 		return m.Uids
 	}
@@ -490,6 +490,53 @@ func (m *CountResponse) GetRelationCount() map[int64]*RelationCount {
 	return nil
 }
 
+type UserFollowResponse struct {
+	Fm                   map[int64]*model.FollowList `protobuf:"bytes,1,rep,name=fm,proto3" json:"fm,omitempty" protobuf_key:"varint,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	XXX_NoUnkeyedLiteral struct{}                    `json:"-"`
+	XXX_unrecognized     []byte                      `json:"-"`
+	XXX_sizecache        int32                       `json:"-"`
+}
+
+func (m *UserFollowResponse) Reset()         { *m = UserFollowResponse{} }
+func (m *UserFollowResponse) String() string { return proto.CompactTextString(m) }
+func (*UserFollowResponse) ProtoMessage()    {}
+func (*UserFollowResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_d3247fba2014e40f, []int{9}
+}
+func (m *UserFollowResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *UserFollowResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_UserFollowResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *UserFollowResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_UserFollowResponse.Merge(m, src)
+}
+func (m *UserFollowResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *UserFollowResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_UserFollowResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_UserFollowResponse proto.InternalMessageInfo
+
+func (m *UserFollowResponse) GetFm() map[int64]*model.FollowList {
+	if m != nil {
+		return m.Fm
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*EmptyResponse)(nil), "relationsvc.EmptyResponse")
 	proto.RegisterType((*FollowRequest)(nil), "relationsvc.FollowRequest")
@@ -498,10 +545,12 @@ func init() {
 	proto.RegisterType((*RelationResponse)(nil), "relationsvc.RelationResponse")
 	proto.RegisterMapType((map[int64]*RelationItem)(nil), "relationsvc.RelationResponse.RmEntry")
 	proto.RegisterType((*ListRequest)(nil), "relationsvc.ListRequest")
-	proto.RegisterType((*CountRequest)(nil), "relationsvc.CountRequest")
+	proto.RegisterType((*BatchRequest)(nil), "relationsvc.BatchRequest")
 	proto.RegisterType((*RelationCount)(nil), "relationsvc.RelationCount")
 	proto.RegisterType((*CountResponse)(nil), "relationsvc.CountResponse")
 	proto.RegisterMapType((map[int64]*RelationCount)(nil), "relationsvc.CountResponse.RelationCountEntry")
+	proto.RegisterType((*UserFollowResponse)(nil), "relationsvc.UserFollowResponse")
+	proto.RegisterMapType((map[int64]*model.FollowList)(nil), "relationsvc.UserFollowResponse.FmEntry")
 }
 
 func init() {
@@ -509,42 +558,46 @@ func init() {
 }
 
 var fileDescriptor_d3247fba2014e40f = []byte{
-	// 550 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x94, 0xd1, 0x8a, 0xd3, 0x40,
-	0x14, 0x86, 0x9d, 0xc4, 0x76, 0x97, 0x93, 0x66, 0x5b, 0x07, 0xc4, 0x6e, 0x70, 0x6b, 0x8d, 0x2c,
-	0xf6, 0xc6, 0xac, 0x54, 0xc4, 0x22, 0x22, 0xb2, 0xb2, 0x2e, 0x15, 0x2f, 0x24, 0xee, 0x5e, 0x08,
-	0x42, 0xa8, 0xcd, 0x2c, 0x84, 0x4d, 0x32, 0x75, 0x32, 0xa9, 0xf4, 0x4d, 0x04, 0x5f, 0xc0, 0xf7,
-	0xf0, 0xc6, 0x4b, 0x1f, 0x41, 0xea, 0x8b, 0x48, 0x32, 0x33, 0x69, 0x46, 0x53, 0x41, 0xbc, 0xcb,
-	0x9c, 0xf9, 0xff, 0x73, 0xce, 0x7c, 0x3d, 0xa7, 0x70, 0x37, 0x4a, 0x39, 0x61, 0xe9, 0x2c, 0x3e,
-	0x62, 0x24, 0x9e, 0xf1, 0x88, 0xa6, 0xd9, 0x72, 0x5e, 0x7d, 0x07, 0xd9, 0x72, 0xee, 0x2d, 0x18,
-	0xe5, 0x14, 0x5b, 0xb5, 0x7b, 0xe7, 0xa0, 0x72, 0x25, 0x34, 0x24, 0x1b, 0xaf, 0xd0, 0xba, 0x5d,
-	0xb0, 0x4f, 0x92, 0x05, 0x5f, 0xf9, 0x24, 0x5b, 0xd0, 0x34, 0x23, 0xee, 0x04, 0xec, 0x17, 0x34,
-	0x8e, 0xe9, 0x47, 0x9f, 0x7c, 0xc8, 0x49, 0xc6, 0x71, 0x0f, 0xcc, 0x3c, 0x0a, 0xfb, 0x68, 0x88,
-	0x46, 0xa6, 0x5f, 0x7c, 0xe2, 0xeb, 0xd0, 0xe6, 0x34, 0x28, 0x82, 0x46, 0x19, 0x6c, 0x71, 0x7a,
-	0x1e, 0x85, 0xee, 0x23, 0xe8, 0xfa, 0x32, 0xf9, 0x76, 0x2f, 0x86, 0xab, 0x79, 0x14, 0x66, 0x7d,
-	0x63, 0x68, 0x8e, 0x4c, 0xbf, 0xfc, 0x76, 0x17, 0xd0, 0x51, 0xc6, 0x29, 0x27, 0x09, 0x76, 0x60,
-	0x57, 0x75, 0x59, 0x5a, 0x5b, 0x7e, 0x75, 0xc6, 0xb7, 0xc0, 0xba, 0x28, 0xdb, 0x0b, 0x78, 0x94,
-	0x10, 0xd9, 0x00, 0x88, 0xd0, 0x59, 0x94, 0x10, 0x7c, 0x07, 0x6c, 0x71, 0x22, 0xa1, 0x90, 0x98,
-	0xa5, 0xa4, 0xa3, 0x82, 0x85, 0xc8, 0xfd, 0x8c, 0xa0, 0xb7, 0xe9, 0x55, 0xbc, 0x1c, 0x3f, 0x04,
-	0x83, 0x25, 0x7d, 0x34, 0x34, 0x47, 0xd6, 0xf8, 0xd0, 0xab, 0x31, 0xf4, 0x7e, 0x97, 0x7a, 0x7e,
-	0x72, 0x92, 0x72, 0xb6, 0xf2, 0x0d, 0x96, 0x38, 0xaf, 0x61, 0x47, 0x1e, 0x8b, 0xe7, 0x5e, 0x92,
-	0x95, 0x7a, 0xee, 0x25, 0x59, 0xe1, 0x23, 0x68, 0x2d, 0x67, 0x71, 0x2e, 0x1a, 0xb5, 0xc6, 0xfb,
-	0x8d, 0x69, 0x8b, 0x47, 0xfb, 0x42, 0xf7, 0xd8, 0x98, 0x20, 0x77, 0x02, 0xd6, 0xab, 0x28, 0xe3,
-	0xdb, 0x21, 0xde, 0x80, 0x9d, 0x78, 0x96, 0xf1, 0xa0, 0xfa, 0x05, 0xda, 0xc5, 0x71, 0x1a, 0xba,
-	0x2e, 0x74, 0x9e, 0xd3, 0x3c, 0xad, 0xac, 0x8a, 0x36, 0xaa, 0xd1, 0x7e, 0x0b, 0xb6, 0x2a, 0x5c,
-	0x6a, 0xf1, 0x6d, 0x90, 0x70, 0x82, 0x79, 0x71, 0x96, 0x85, 0x24, 0x66, 0x21, 0x39, 0x84, 0x3d,
-	0xc9, 0x8f, 0x49, 0x91, 0xa8, 0xab, 0x50, 0xb3, 0x52, 0xe6, 0x7e, 0x45, 0x60, 0xcb, 0xfa, 0x92,
-	0xe9, 0x19, 0xec, 0x55, 0x03, 0xaa, 0xb2, 0x17, 0x7c, 0xef, 0x69, 0x20, 0x34, 0x8f, 0xa7, 0x75,
-	0x27, 0x38, 0xdb, 0xac, 0x1e, 0x73, 0xde, 0x01, 0xfe, 0x53, 0xd4, 0x40, 0xff, 0xbe, 0x4e, 0xdf,
-	0x69, 0xa4, 0x2f, 0x8a, 0x6f, 0xf0, 0x8f, 0xbf, 0x98, 0x60, 0xa9, 0xcb, 0x37, 0xcb, 0x39, 0x7e,
-	0x06, 0x6d, 0xb1, 0x11, 0x58, 0x4f, 0xa0, 0xad, 0x89, 0xa3, 0xdf, 0x69, 0x3b, 0x85, 0x8f, 0x61,
-	0xf7, 0x3c, 0xbd, 0xf8, 0xbf, 0x1c, 0x4f, 0xc0, 0x3e, 0x25, 0x5c, 0xe8, 0x8b, 0xe9, 0xc0, 0x7d,
-	0x4d, 0x5c, 0x1b, 0x18, 0xe7, 0x9a, 0x57, 0xae, 0xba, 0x57, 0x13, 0x3f, 0x85, 0x6e, 0xe5, 0x26,
-	0xec, 0xdf, 0xfd, 0x2f, 0xc1, 0x3a, 0x25, 0x5c, 0x51, 0xc1, 0x37, 0xb7, 0xac, 0x87, 0xf0, 0x1f,
-	0xfc, 0x75, 0x79, 0xf0, 0x14, 0x7a, 0xb5, 0x5c, 0x62, 0xc0, 0xf6, 0x9b, 0xe6, 0xa1, 0x09, 0x8a,
-	0x36, 0x2a, 0xc7, 0xbd, 0x6f, 0xeb, 0x01, 0xfa, 0xbe, 0x1e, 0xa0, 0x1f, 0xeb, 0x01, 0xfa, 0xf4,
-	0x73, 0x70, 0xe5, 0x7d, 0xbb, 0xfc, 0x5b, 0x7b, 0xf0, 0x2b, 0x00, 0x00, 0xff, 0xff, 0x01, 0x15,
-	0xc8, 0x7b, 0x2d, 0x05, 0x00, 0x00,
+	// 613 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x54, 0x5f, 0x8f, 0xd2, 0x4e,
+	0x14, 0xfd, 0x4d, 0xfb, 0x03, 0x36, 0xb7, 0x14, 0x70, 0x12, 0x23, 0x36, 0x2e, 0x8b, 0x35, 0x1b,
+	0x78, 0xb1, 0x6b, 0x30, 0x66, 0x89, 0x31, 0xc6, 0x60, 0x16, 0xc4, 0xec, 0x83, 0xa9, 0xcb, 0x83,
+	0x89, 0x09, 0x41, 0x3a, 0xc4, 0x66, 0xfb, 0x07, 0xa7, 0x03, 0x86, 0x4f, 0xa2, 0x89, 0x1f, 0xc7,
+	0x17, 0x1f, 0xfd, 0x08, 0x06, 0xbf, 0x83, 0xcf, 0xa6, 0x9d, 0x4e, 0xe9, 0x2c, 0xb0, 0xc6, 0xf8,
+	0x36, 0x73, 0x39, 0xe7, 0xce, 0xb9, 0xa7, 0xe7, 0x02, 0x2d, 0x37, 0x60, 0x84, 0x06, 0x13, 0xef,
+	0x84, 0x12, 0x6f, 0xc2, 0xdc, 0x30, 0x88, 0x96, 0xd3, 0xec, 0x3c, 0x8e, 0x96, 0x53, 0x6b, 0x4e,
+	0x43, 0x16, 0x62, 0x2d, 0xf7, 0xbb, 0x71, 0x98, 0xb1, 0xfc, 0xd0, 0x21, 0x1b, 0x2e, 0xc7, 0x9a,
+	0x55, 0xd0, 0xcf, 0xfc, 0x39, 0x5b, 0xd9, 0x24, 0x9a, 0x87, 0x41, 0x44, 0xcc, 0x2e, 0xe8, 0xfd,
+	0xd0, 0xf3, 0xc2, 0x8f, 0x36, 0xf9, 0xb0, 0x20, 0x11, 0xc3, 0x35, 0x50, 0x17, 0xae, 0x53, 0x47,
+	0x4d, 0xd4, 0x56, 0xed, 0xf8, 0x88, 0x6f, 0x42, 0x91, 0x85, 0xe3, 0xb8, 0xa8, 0x24, 0xc5, 0x02,
+	0x0b, 0x47, 0xae, 0x63, 0x9e, 0x42, 0xd5, 0x4e, 0x9b, 0xef, 0xe7, 0x62, 0xf8, 0x7f, 0xe1, 0x3a,
+	0x51, 0x5d, 0x69, 0xaa, 0x6d, 0xd5, 0x4e, 0xce, 0xe6, 0x1c, 0xca, 0x82, 0x38, 0x64, 0xc4, 0xc7,
+	0x06, 0x1c, 0x08, 0x95, 0x09, 0xb5, 0x60, 0x67, 0x77, 0x7c, 0x04, 0xda, 0x2c, 0x91, 0x37, 0x66,
+	0xae, 0x4f, 0x52, 0x01, 0xc0, 0x4b, 0x17, 0xae, 0x4f, 0xf0, 0x3d, 0xd0, 0xf9, 0x8d, 0x38, 0x1c,
+	0xa2, 0x26, 0x90, 0xb2, 0x28, 0xc6, 0x20, 0xf3, 0x0b, 0x82, 0xda, 0x46, 0x2b, 0x9f, 0x1c, 0x3f,
+	0x02, 0x85, 0xfa, 0x75, 0xd4, 0x54, 0xdb, 0x5a, 0xe7, 0xd8, 0xca, 0x79, 0x68, 0x5d, 0x85, 0x5a,
+	0xb6, 0x7f, 0x16, 0x30, 0xba, 0xb2, 0x15, 0xea, 0x1b, 0xaf, 0xa0, 0x94, 0x5e, 0xe3, 0x71, 0x2f,
+	0xc9, 0x4a, 0x8c, 0x7b, 0x49, 0x56, 0xf8, 0x04, 0x0a, 0xcb, 0x89, 0xb7, 0xe0, 0x42, 0xb5, 0xce,
+	0xed, 0x9d, 0x6d, 0xe3, 0xa1, 0x6d, 0x8e, 0x7b, 0xac, 0x74, 0x91, 0xd9, 0x05, 0xed, 0xdc, 0x8d,
+	0xd8, 0x7e, 0x13, 0x6f, 0x41, 0xc9, 0x9b, 0x44, 0x6c, 0x9c, 0x7d, 0x81, 0x62, 0x7c, 0x1d, 0x3a,
+	0xa6, 0x09, 0xe5, 0xde, 0x84, 0x4d, 0xdf, 0x0b, 0xaa, 0x70, 0x1b, 0xe5, 0xdc, 0x7e, 0x03, 0xba,
+	0x78, 0xf8, 0x79, 0xb8, 0x08, 0x18, 0xbe, 0x0b, 0xa9, 0x39, 0xe3, 0x69, 0x7c, 0x4f, 0x1f, 0x4a,
+	0x6d, 0xe6, 0x90, 0x63, 0xa8, 0xa4, 0xfe, 0xd1, 0x14, 0xc4, 0xdf, 0x15, 0x56, 0xd3, 0x04, 0x66,
+	0x7e, 0x45, 0xa0, 0x27, 0xa7, 0xcc, 0xd3, 0x0b, 0xa8, 0x64, 0x01, 0x15, 0xdd, 0x63, 0x7f, 0xef,
+	0x4b, 0x46, 0x48, 0x1c, 0x4b, 0x52, 0xc7, 0x7d, 0xd6, 0x69, 0xbe, 0x66, 0xbc, 0x05, 0xbc, 0x0d,
+	0xda, 0xe1, 0xfe, 0x03, 0xd9, 0x7d, 0x63, 0xa7, 0xfb, 0xfc, 0xf1, 0x9c, 0xfd, 0x9f, 0x10, 0xe0,
+	0x51, 0x44, 0xa8, 0x58, 0x83, 0x74, 0x94, 0x53, 0x50, 0x66, 0x22, 0x1e, 0x2d, 0xa9, 0xd3, 0x36,
+	0xd8, 0xea, 0x8b, 0x80, 0xcc, 0x7c, 0xe3, 0x05, 0x94, 0xfa, 0x7b, 0x03, 0xd2, 0x92, 0x25, 0xde,
+	0xb0, 0x92, 0x2d, 0xb5, 0x78, 0xbb, 0x24, 0x05, 0x1b, 0x65, 0x9d, 0x5f, 0x2a, 0x68, 0x42, 0xf6,
+	0xeb, 0xe5, 0x14, 0x3f, 0x83, 0x22, 0x07, 0x62, 0x79, 0x34, 0x69, 0x81, 0x0d, 0xf9, 0x37, 0x69,
+	0xdb, 0x71, 0x0f, 0x0e, 0x46, 0xc1, 0xec, 0xdf, 0x7a, 0x3c, 0x01, 0x7d, 0x40, 0xd8, 0x46, 0x31,
+	0xae, 0x4b, 0xe0, 0x5c, 0x94, 0x8d, 0xed, 0xf1, 0xf0, 0x53, 0xa8, 0x66, 0x6c, 0x42, 0xff, 0x9e,
+	0xff, 0x12, 0xb4, 0x01, 0x61, 0xc2, 0x15, 0x7c, 0x67, 0xcf, 0xe2, 0x72, 0xfe, 0xe1, 0xb5, 0x6b,
+	0x8d, 0x87, 0x50, 0xcb, 0xf5, 0xe2, 0xd1, 0x97, 0x57, 0x36, 0xbf, 0x5d, 0x57, 0x4c, 0x91, 0x83,
+	0x7f, 0x0e, 0x95, 0x01, 0x61, 0x71, 0x32, 0xa2, 0xf4, 0x13, 0x5d, 0xd3, 0xe8, 0xe8, 0x0f, 0x71,
+	0xea, 0xd5, 0xbe, 0xad, 0x1b, 0xe8, 0xfb, 0xba, 0x81, 0x7e, 0xac, 0x1b, 0xe8, 0xf3, 0xcf, 0xc6,
+	0x7f, 0xef, 0x8a, 0xc9, 0xdf, 0xf7, 0xc3, 0xdf, 0x01, 0x00, 0x00, 0xff, 0xff, 0x55, 0x8a, 0x1c,
+	0xa4, 0x15, 0x06, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -564,7 +617,8 @@ type RelationSvcClient interface {
 	GetFollowList(ctx context.Context, in *ListRequest, opts ...grpc.CallOption) (*model.FollowList, error)
 	GetFollowerList(ctx context.Context, in *ListRequest, opts ...grpc.CallOption) (*model.FollowList, error)
 	GetRelation(ctx context.Context, in *RelationRequest, opts ...grpc.CallOption) (*RelationResponse, error)
-	GetRelationCount(ctx context.Context, in *CountRequest, opts ...grpc.CallOption) (*CountResponse, error)
+	GetRelationCount(ctx context.Context, in *BatchRequest, opts ...grpc.CallOption) (*CountResponse, error)
+	GetUsersFollow(ctx context.Context, in *BatchRequest, opts ...grpc.CallOption) (*UserFollowResponse, error)
 }
 
 type relationSvcClient struct {
@@ -620,9 +674,18 @@ func (c *relationSvcClient) GetRelation(ctx context.Context, in *RelationRequest
 	return out, nil
 }
 
-func (c *relationSvcClient) GetRelationCount(ctx context.Context, in *CountRequest, opts ...grpc.CallOption) (*CountResponse, error) {
+func (c *relationSvcClient) GetRelationCount(ctx context.Context, in *BatchRequest, opts ...grpc.CallOption) (*CountResponse, error) {
 	out := new(CountResponse)
 	err := c.cc.Invoke(ctx, "/relationsvc.RelationSvc/GetRelationCount", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *relationSvcClient) GetUsersFollow(ctx context.Context, in *BatchRequest, opts ...grpc.CallOption) (*UserFollowResponse, error) {
+	out := new(UserFollowResponse)
+	err := c.cc.Invoke(ctx, "/relationsvc.RelationSvc/GetUsersFollow", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -636,7 +699,8 @@ type RelationSvcServer interface {
 	GetFollowList(context.Context, *ListRequest) (*model.FollowList, error)
 	GetFollowerList(context.Context, *ListRequest) (*model.FollowList, error)
 	GetRelation(context.Context, *RelationRequest) (*RelationResponse, error)
-	GetRelationCount(context.Context, *CountRequest) (*CountResponse, error)
+	GetRelationCount(context.Context, *BatchRequest) (*CountResponse, error)
+	GetUsersFollow(context.Context, *BatchRequest) (*UserFollowResponse, error)
 }
 
 // UnimplementedRelationSvcServer can be embedded to have forward compatible implementations.
@@ -658,8 +722,11 @@ func (*UnimplementedRelationSvcServer) GetFollowerList(ctx context.Context, req 
 func (*UnimplementedRelationSvcServer) GetRelation(ctx context.Context, req *RelationRequest) (*RelationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetRelation not implemented")
 }
-func (*UnimplementedRelationSvcServer) GetRelationCount(ctx context.Context, req *CountRequest) (*CountResponse, error) {
+func (*UnimplementedRelationSvcServer) GetRelationCount(ctx context.Context, req *BatchRequest) (*CountResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetRelationCount not implemented")
+}
+func (*UnimplementedRelationSvcServer) GetUsersFollow(ctx context.Context, req *BatchRequest) (*UserFollowResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUsersFollow not implemented")
 }
 
 func RegisterRelationSvcServer(s *grpc.Server, srv RelationSvcServer) {
@@ -757,7 +824,7 @@ func _RelationSvc_GetRelation_Handler(srv interface{}, ctx context.Context, dec 
 }
 
 func _RelationSvc_GetRelationCount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CountRequest)
+	in := new(BatchRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -769,7 +836,25 @@ func _RelationSvc_GetRelationCount_Handler(srv interface{}, ctx context.Context,
 		FullMethod: "/relationsvc.RelationSvc/GetRelationCount",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(RelationSvcServer).GetRelationCount(ctx, req.(*CountRequest))
+		return srv.(RelationSvcServer).GetRelationCount(ctx, req.(*BatchRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _RelationSvc_GetUsersFollow_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BatchRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RelationSvcServer).GetUsersFollow(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/relationsvc.RelationSvc/GetUsersFollow",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RelationSvcServer).GetUsersFollow(ctx, req.(*BatchRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -801,6 +886,10 @@ var _RelationSvc_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetRelationCount",
 			Handler:    _RelationSvc_GetRelationCount_Handler,
+		},
+		{
+			MethodName: "GetUsersFollow",
+			Handler:    _RelationSvc_GetUsersFollow_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -1052,7 +1141,7 @@ func (m *ListRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *CountRequest) Marshal() (dAtA []byte, err error) {
+func (m *BatchRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1062,12 +1151,12 @@ func (m *CountRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *CountRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *BatchRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *CountRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *BatchRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1162,6 +1251,57 @@ func (m *CountResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	if len(m.RelationCount) > 0 {
 		for k := range m.RelationCount {
 			v := m.RelationCount[k]
+			baseI := i
+			if v != nil {
+				{
+					size, err := v.MarshalToSizedBuffer(dAtA[:i])
+					if err != nil {
+						return 0, err
+					}
+					i -= size
+					i = encodeVarintRelationSvc(dAtA, i, uint64(size))
+				}
+				i--
+				dAtA[i] = 0x12
+			}
+			i = encodeVarintRelationSvc(dAtA, i, uint64(k))
+			i--
+			dAtA[i] = 0x8
+			i = encodeVarintRelationSvc(dAtA, i, uint64(baseI-i))
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *UserFollowResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *UserFollowResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *UserFollowResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	if len(m.Fm) > 0 {
+		for k := range m.Fm {
+			v := m.Fm[k]
 			baseI := i
 			if v != nil {
 				{
@@ -1313,7 +1453,7 @@ func (m *ListRequest) Size() (n int) {
 	return n
 }
 
-func (m *CountRequest) Size() (n int) {
+func (m *BatchRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1358,6 +1498,31 @@ func (m *CountResponse) Size() (n int) {
 	_ = l
 	if len(m.RelationCount) > 0 {
 		for k, v := range m.RelationCount {
+			_ = k
+			_ = v
+			l = 0
+			if v != nil {
+				l = v.Size()
+				l += 1 + sovRelationSvc(uint64(l))
+			}
+			mapEntrySize := 1 + sovRelationSvc(uint64(k)) + l
+			n += mapEntrySize + 1 + sovRelationSvc(uint64(mapEntrySize))
+		}
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *UserFollowResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Fm) > 0 {
+		for k, v := range m.Fm {
 			_ = k
 			_ = v
 			l = 0
@@ -2030,7 +2195,7 @@ func (m *ListRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *CountRequest) Unmarshal(dAtA []byte) error {
+func (m *BatchRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2053,10 +2218,10 @@ func (m *CountRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: CountRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: BatchRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: CountRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: BatchRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -2389,6 +2554,172 @@ func (m *CountResponse) Unmarshal(dAtA []byte) error {
 				}
 			}
 			m.RelationCount[mapkey] = mapvalue
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipRelationSvc(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthRelationSvc
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *UserFollowResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowRelationSvc
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: UserFollowResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: UserFollowResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Fm", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowRelationSvc
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthRelationSvc
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthRelationSvc
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Fm == nil {
+				m.Fm = make(map[int64]*model.FollowList)
+			}
+			var mapkey int64
+			var mapvalue *model.FollowList
+			for iNdEx < postIndex {
+				entryPreIndex := iNdEx
+				var wire uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowRelationSvc
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					wire |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				fieldNum := int32(wire >> 3)
+				if fieldNum == 1 {
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowRelationSvc
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						mapkey |= int64(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+				} else if fieldNum == 2 {
+					var mapmsglen int
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowRelationSvc
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						mapmsglen |= int(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					if mapmsglen < 0 {
+						return ErrInvalidLengthRelationSvc
+					}
+					postmsgIndex := iNdEx + mapmsglen
+					if postmsgIndex < 0 {
+						return ErrInvalidLengthRelationSvc
+					}
+					if postmsgIndex > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapvalue = &model.FollowList{}
+					if err := mapvalue.Unmarshal(dAtA[iNdEx:postmsgIndex]); err != nil {
+						return err
+					}
+					iNdEx = postmsgIndex
+				} else {
+					iNdEx = entryPreIndex
+					skippy, err := skipRelationSvc(dAtA[iNdEx:])
+					if err != nil {
+						return err
+					}
+					if (skippy < 0) || (iNdEx+skippy) < 0 {
+						return ErrInvalidLengthRelationSvc
+					}
+					if (iNdEx + skippy) > postIndex {
+						return io.ErrUnexpectedEOF
+					}
+					iNdEx += skippy
+				}
+			}
+			m.Fm[mapkey] = mapvalue
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

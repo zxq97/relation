@@ -30,7 +30,7 @@ message ListRequest {
   int64 last_id = 2;
 }
 
-message CountRequest {
+message BatchRequest {
   repeated int64 uids = 1;
 }
 
@@ -43,11 +43,16 @@ message CountResponse {
   map<int64, RelationCount> relation_count = 1;
 }
 
+message UserFollowResponse {
+  map<int64, model.FollowList> fm = 1;
+}
+
 service RelationSvc {
   rpc Follow(FollowRequest) returns (EmptyResponse);
   rpc Unfollow(FollowRequest) returns (EmptyResponse);
   rpc GetFollowList(ListRequest) returns (model.FollowList);
   rpc GetFollowerList(ListRequest) returns (model.FollowList);
   rpc GetRelation(RelationRequest) returns (RelationResponse);
-  rpc GetRelationCount(CountRequest) returns (CountResponse);
+  rpc GetRelationCount(BatchRequest) returns (CountResponse);
+  rpc GetUsersFollow(BatchRequest) returns (UserFollowResponse);
 }

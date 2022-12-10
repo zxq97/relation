@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"sort"
-	"sync"
 
 	"github.com/zxq97/gotool/cast"
 	"github.com/zxq97/gotool/concurrent"
@@ -143,22 +142,17 @@ func (RelationSvc) GetRelation(ctx context.Context, req *RelationRequest) (*Rela
 	}
 	followerMap, missed, err := cache.IsFollowers(ctx, req.Uid, req.Uids)
 	if err != nil || len(missed) != 0 {
-		wg := concurrent.WaitGroup{}
-		lock := sync.Mutex{}
-		for _, v := range missed {
-			wg.Go(func() {
-				list, err := getUserFollow(ctx, v)
-				if err != nil {
-					return
+		dbm, err := getUsersFollow(ctx, missed)
+		if err != nil {
+			return &RelationResponse{}, err
+		}
+		for k, v := range dbm {
+			for _, f := range v {
+				if f.ToUid == req.Uid {
+					followerMap[k] = f.CreateTime
+					break
 				}
-				for _, u := range list {
-					if u.ToUid == v {
-						lock.Lock()
-						followerMap[v] = u.CreateTime
-						lock.Unlock()
-					}
-				}
-			})
+			}
 		}
 	}
 	relationMap := make(map[int64]*RelationItem, len(req.Uids))
@@ -174,7 +168,7 @@ func (RelationSvc) GetRelation(ctx context.Context, req *RelationRequest) (*Rela
 }
 
 //GetRelationCount 关注 粉丝 数量
-func (RelationSvc) GetRelationCount(ctx context.Context, req *CountRequest) (*CountResponse, error) {
+func (RelationSvc) GetRelationCount(ctx context.Context, req *BatchRequest) (*CountResponse, error) {
 	fm, missed, err := cache.GetRelationCount(ctx, req.Uids)
 	if err != nil || len(missed) > 0 {
 		dbm, err := store.GetUsersFollowCount(ctx, req.Uids)
@@ -194,4 +188,19 @@ func (RelationSvc) GetRelationCount(ctx context.Context, req *CountRequest) (*Co
 		cache.SetRelationCount(ctx, dbm)
 	}
 	return &CountResponse{RelationCount: fcDAO2DTO(fm)}, nil
+}
+
+//GetUsersFollow 获取全量关注
+func (RelationSvc) GetUsersFollow(ctx context.Context, req *BatchRequest) (*UserFollowResponse, error) {
+	m, missed, err := cache.GetUsersFollow(ctx, req.Uids)
+	if err != nil || len(missed) != 0 {
+		dbm, err := getUsersFollow(ctx, req.Uids)
+		if err != nil {
+			return &UserFollowResponse{}, err
+		}
+		for k, v := range dbm {
+			m[k] = v
+		}
+	}
+	return &UserFollowResponse{Fm: usDAO2DTO(m)}, nil
 }

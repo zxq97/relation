@@ -2,6 +2,7 @@ package relationtask
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/golang/protobuf/proto"
@@ -12,6 +13,10 @@ import (
 	"github.com/zxq97/relation/internal/model"
 	"github.com/zxq97/relation/internal/relationsvc"
 	"github.com/zxq97/relation/internal/store"
+)
+
+const (
+	localCacheKeyFollower = "loc_fo_%d_%d" // uid lastid
 )
 
 func relation(ctx context.Context, kfkmsg *kafka.KafkaMessage) {
@@ -48,11 +53,21 @@ func rebuild(ctx context.Context, kfkmsg *kafka.KafkaMessage) {
 	}
 	switch kfkmsg.EventType {
 	case kafka.EventTypeListMissed:
-		item, err := store.GetUserFollower(ctx, list.Uid, list.LastId, constant.ListRebuildSize)
-		if err != nil {
-			env.ExcLogger.Println()
-			return
+		key := fmt.Sprintf(localCacheKeyFollower, list.Uid, list.LastId)
+		// xxx 运用 local cache 防止上层多个cache missed 多次穿透db
+		_, ok := localCache.Get(key)
+		if !ok {
+			item, err := store.GetUserFollower(ctx, list.Uid, list.LastId, constant.ListRebuildSize)
+			if err != nil {
+				env.ExcLogger.Println()
+				return
+			}
+			err = cache.AddUserFollower(ctx, list.Uid, item)
+			if err != nil {
+				env.ExcLogger.Println()
+				return
+			}
+			localCache.Set(key, nil, time.Minute*5)
 		}
-		cache.AddUserFollower(ctx, list.Uid, item)
 	}
 }

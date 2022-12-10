@@ -1,15 +1,20 @@
 package relationtask
 
 import (
+	"time"
+
 	"github.com/zxq97/gotool/config"
 	"github.com/zxq97/gotool/kafka"
 	"github.com/zxq97/relation/internal/cache"
 	"github.com/zxq97/relation/internal/env"
 	"github.com/zxq97/relation/internal/store"
+
+	loccache "github.com/patrickmn/go-cache"
 )
 
 var (
-	consumers = []*kafka.Consumer{}
+	consumers  = []*kafka.Consumer{}
+	localCache *loccache.Cache
 )
 
 func InitRelationTask(conf *RelationTaskConfig) error {
@@ -17,6 +22,7 @@ func InitRelationTask(conf *RelationTaskConfig) error {
 	if err != nil {
 		return err
 	}
+	localCache = loccache.New(5*time.Minute, 15*time.Minute)
 	cache.InitCache(conf.Redis["redis"], conf.MC["mc"])
 	err = store.InitStore(conf.Mysql["relation"])
 	return err

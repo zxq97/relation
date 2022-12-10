@@ -3,6 +3,7 @@ package relationsvc
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/zxq97/gotool/concurrent"
@@ -56,6 +57,30 @@ func getUserFollow(ctx context.Context, uid int64) ([]*model.FollowItem, error) 
 	return list, nil
 }
 
+func getUsersFollow(ctx context.Context, uids []int64) (map[int64][]*model.FollowItem, error) {
+	eg := concurrent.NewErrGroup(ctx)
+	lock := sync.Mutex{}
+	m := make(map[int64][]*model.FollowItem, len(uids))
+	for _, v := range uids {
+		u := v
+		eg.Go(func() error {
+			list, err := getUserFollow(ctx, u)
+			if err != nil {
+				return err
+			}
+			lock.Lock()
+			defer lock.Unlock()
+			m[u] = list
+			return nil
+		})
+	}
+	err := eg.Wait()
+	if err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 func fcDAO2DTO(m map[int64]*model.UserFollowCount) map[int64]*RelationCount {
 	rm := make(map[int64]*RelationCount, len(m))
 	for k, v := range m {
@@ -65,4 +90,12 @@ func fcDAO2DTO(m map[int64]*model.UserFollowCount) map[int64]*RelationCount {
 		}
 	}
 	return rm
+}
+
+func usDAO2DTO(m map[int64][]*model.FollowItem) map[int64]*model.FollowList {
+	fm := make(map[int64]*model.FollowList, len(m))
+	for k, v := range m {
+		fm[k] = &model.FollowList{List: v}
+	}
+	return fm
 }
