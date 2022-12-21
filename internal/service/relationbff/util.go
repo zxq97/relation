@@ -2,7 +2,7 @@ package relationbff
 
 import (
 	"github.com/zxq97/relation/internal/model"
-	"github.com/zxq97/relation/internal/relationsvc"
+	"github.com/zxq97/relation/internal/service/relationsvc"
 	"github.com/zxq97/relation/pkg/relation"
 )
 

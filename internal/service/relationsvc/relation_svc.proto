@@ -1,6 +1,5 @@
 syntax = "proto3";
 package relationsvc;
-import "internal/model/relation.proto";
 
 message EmptyResponse {
 }

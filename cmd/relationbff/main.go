@@ -11,14 +11,14 @@ import (
 
 	"github.com/zxq97/gotool/config"
 	"github.com/zxq97/gotool/rpc"
-	"github.com/zxq97/relation/internal/relationbff"
+	relationbff2 "github.com/zxq97/relation/internal/service/relationbff"
 	"github.com/zxq97/relation/pkg/relation"
 	"google.golang.org/grpc/reflection"
 )
 
 var (
 	confPath = flag.String("conf", "", "configuration file")
-	conf     relationbff.RelationBffConfig
+	conf     relationbff2.RelationBffConfig
 )
 
 func main() {
@@ -37,7 +37,7 @@ func main() {
 		panic(err)
 	}
 	// todo black conn
-	err = relationbff.InitRelationBFF(&conf, conn)
+	err = relationbff2.InitRelationBFF(&conf, conn)
 	if err != nil {
 		panic(err)
 	}
@@ -46,7 +46,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	relation.RegisterRelationServer(svc, &relationbff.RelationBFF{})
+	relation.RegisterRelationServer(svc, &relationbff2.RelationBFF{})
 
 	lis, err := net.Listen("tcp", conf.Svc.Bind)
 	if err != nil {
