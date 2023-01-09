@@ -8,10 +8,6 @@ import (
 	"upper.io/db.v3/lib/sqlbuilder"
 )
 
-//type RelationBFFRepo struct {
-//	client relationsvc.RelationSvcClient
-//}
-
 type RelationSvcRepoImpl struct {
 	redis    *redisx.RedisX
 	mc       *memcachex.MemcacheX

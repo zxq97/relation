@@ -1,5 +1,5 @@
 syntax = "proto3";
-package relation;
+package api;
 
 enum Source {
   Undefined = 0;
@@ -53,8 +53,8 @@ message CountRequest {
 }
 
 message RelationCount {
-  int64 follow_count = 1;
-  int64 follower_count = 2;
+  int32 follow_count = 1;
+  int32 follower_count = 2;
 }
 
 message CountResponse {

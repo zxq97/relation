@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/zxq97/relation/internal/biz"
+	"github.com/zxq97/relation/internal/env"
 )
 
 type RelationSvc struct {
@@ -11,6 +12,10 @@ type RelationSvc struct {
 }
 
 func InitRelationSvc(conf *RelationSvcConfig) (*RelationSvc, error) {
+	err := env.InitLog(conf.LogPath)
+	if err != nil {
+		return nil, err
+	}
 	rsb, err := biz.NewRelationSvcBIZ(conf.Redis["redis"], conf.MC["mc"], conf.Mysql["relation"], conf.Kafka["kafka"].Addr)
 	if err != nil {
 		return nil, err

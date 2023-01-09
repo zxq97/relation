@@ -6,8 +6,8 @@ type ListItem struct {
 }
 
 type CountItem struct {
-	FollowCount   int64 `json:"follow_count"`
-	FollowerCount int64 `json:"follower_count"`
+	FollowCount   int32 `json:"follow_count"`
+	FollowerCount int32 `json:"follower_count"`
 }
 
 type RItem struct {

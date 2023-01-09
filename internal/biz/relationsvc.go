@@ -85,11 +85,11 @@ func (rsb *RelationSvcBIZ) GetRelation(ctx context.Context, uid int64, uids []in
 	}
 	relationMap := make(map[int64]*UserRelation, len(uids))
 	for k, v := range followMap {
-		relationMap[k].Relation |= 1
+		relationMap[k].Relation |= env.RelationFollowBIT
 		relationMap[k].FollowTime = v
 	}
 	for k, v := range followerMap {
-		relationMap[k].Relation |= 2
+		relationMap[k].Relation |= env.RelationFollowerBIT
 		relationMap[k].FollowedTime = v
 	}
 	return relationMap, nil

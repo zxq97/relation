@@ -19,7 +19,7 @@ func translateCount(val *relationsvc.CountResponse) *api.CountResponse {
 	return &api.CountResponse{RelationCount: m}
 }
 
-func translateList(val *model.FollowList) *api.ListResponse {
+func translateList(val *relationsvc.FollowList) *api.ListResponse {
 	if val == nil {
 		return &api.ListResponse{}
 	}

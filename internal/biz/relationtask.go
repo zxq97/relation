@@ -18,12 +18,12 @@ type RelationTaskBIZ struct {
 }
 
 func NewRelationTaskBIZ(redisConf *config.RedisConf, mcConf *config.MCConf, mysqlConf *config.MysqlConf) (*RelationTaskBIZ, error) {
-	biz, err := data.NewRelationTaskRepoImpl(redisConf, mcConf, mysqlConf)
+	repo, err := data.NewRelationTaskRepoImpl(redisConf, mcConf, mysqlConf)
 	if err != nil {
 		return nil, err
 	}
 	return &RelationTaskBIZ{
-		repo: biz,
+		repo: repo,
 	}, nil
 }
 
