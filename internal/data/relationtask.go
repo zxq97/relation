@@ -5,10 +5,27 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/patrickmn/go-cache"
 	"github.com/zxq97/gotool/concurrent"
+	"github.com/zxq97/gotool/config"
+	"github.com/zxq97/gotool/memcachex"
+	"github.com/zxq97/gotool/redisx"
 )
 
-func (repo *relationTaskRepo) Follow(ctx context.Context, uid, touid int64) error {
+func NewRelationTaskRepoImpl(redisConf *config.RedisConf, mcConf *config.MCConf, mysqlConf *config.MysqlConf) (*RelationTaskRepoImpl, error) {
+	repo := &RelationTaskRepoImpl{}
+	sess, err := mysqlConf.InitDB()
+	if err != nil {
+		return nil, err
+	}
+	repo.sess = sess
+	repo.redis = redisx.NewRedisX(redisConf)
+	repo.mc = memcachex.NewMemcacheX(mcConf)
+	repo.cache = cache.New(5*time.Minute, 15*time.Minute)
+	return repo, nil
+}
+
+func (repo *RelationTaskRepoImpl) Follow(ctx context.Context, uid, touid int64) error {
 	err := follow(ctx, repo.sess, uid, touid)
 	if err != nil {
 		return err
@@ -32,7 +49,7 @@ func (repo *relationTaskRepo) Follow(ctx context.Context, uid, touid int64) erro
 	return eg.Wait()
 }
 
-func (repo *relationTaskRepo) Unfollow(ctx context.Context, uid, touid int64) error {
+func (repo *RelationTaskRepoImpl) Unfollow(ctx context.Context, uid, touid int64) error {
 	err := unfollow(ctx, repo.sess, uid, touid)
 	if err != nil {
 		return err
@@ -54,7 +71,7 @@ func (repo *relationTaskRepo) Unfollow(ctx context.Context, uid, touid int64) er
 	return eg.Wait()
 }
 
-func (repo *relationTaskRepo) FollowerCacheRebuild(ctx context.Context, uid, lastid int64) error {
+func (repo *RelationTaskRepoImpl) FollowerCacheRebuild(ctx context.Context, uid, lastid int64) error {
 	key := fmt.Sprintf(lcKeyFollower, uid, lastid)
 	_, ok := lcGet(repo.cache, key)
 	if ok {

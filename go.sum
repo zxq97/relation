@@ -247,10 +247,8 @@ github.com/youmark/pkcs8 v0.0.0-20181117223130-1be2e3e5546d/go.mod h1:rHwXgn7Jul
 github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.3.5/go.mod h1:mwnBkeHKe2W/ZEtQ+71ViKU8L12m81fl3OWwC1Zlc8k=
-github.com/zxq97/gotool v0.0.20 h1:UimCAwSV5MhkDBaFbLu4GfBFzTeZnJ2z2pP7FWVGiRs=
-github.com/zxq97/gotool v0.0.20/go.mod h1:3apc6zQTgmAkhIP5QqHy7i7aruPylwfttC/GYgt30jk=
-github.com/zxq97/gotool v0.0.23 h1:RIIx+CedIMzxsNiRVmge4zya6K5XATp8xP6Z9OHE/fM=
-github.com/zxq97/gotool v0.0.23/go.mod h1:3apc6zQTgmAkhIP5QqHy7i7aruPylwfttC/GYgt30jk=
+github.com/zxq97/gotool v0.0.25 h1:seTaM6pI6vtDSOwumsAt6vfZKu6R7Yrd5dDNN9iRkgc=
+github.com/zxq97/gotool v0.0.25/go.mod h1:3apc6zQTgmAkhIP5QqHy7i7aruPylwfttC/GYgt30jk=
 go.etcd.io/etcd/api/v3 v3.5.4 h1:OHVyt3TopwtUQ2GKdd5wu3PmmipR4FTwCqoEjSyRdIc=
 go.etcd.io/etcd/api/v3 v3.5.4/go.mod h1:5GB2vv4A4AOn3yk7MftYGHkUfGtDHnEraIjym4dYz5A=
 go.etcd.io/etcd/client/pkg/v3 v3.5.4 h1:lrneYvz923dvC14R54XcA7FXoZ3mlGZAgmwhfm7HqOg=

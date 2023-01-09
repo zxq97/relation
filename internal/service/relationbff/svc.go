@@ -3,10 +3,9 @@ package relationbff
 import (
 	"context"
 
-	"github.com/zxq97/relation/internal/constant"
+	"github.com/zxq97/relation/api"
 	"github.com/zxq97/relation/internal/env"
 	"github.com/zxq97/relation/internal/service/relationsvc"
-	"github.com/zxq97/relation/pkg/relation"
 	"google.golang.org/grpc"
 )
 
@@ -26,81 +25,81 @@ func InitRelationBFF(conf *RelationBffConfig, conn *grpc.ClientConn) error {
 	return nil
 }
 
-func (RelationBFF) Follow(ctx context.Context, req *relation.FollowRequest) (*relation.EmptyResponse, error) {
-	if req.Source == relation.Source_Undefined {
-		return &relation.EmptyResponse{}, relation.ErrSourceUndefined
+func (RelationBFF) Follow(ctx context.Context, req *api.FollowRequest) (*api.EmptyResponse, error) {
+	if req.Source == api.Source_Undefined {
+		return &api.EmptyResponse{}, api.ErrSourceUndefined
 	}
 	// todo check black
 
 	res, err := client.GetRelationCount(ctx, &relationsvc.BatchRequest{Uids: []int64{req.Uid}})
 	if err != nil {
-		return &relation.EmptyResponse{}, err
+		return &api.EmptyResponse{}, err
 	}
 	rc, ok := res.RelationCount[req.Uid]
 	if !ok || rc.FollowCount < constant.FollowLimit {
 		_, err = client.Follow(ctx, &relationsvc.FollowRequest{Uid: req.Uid, ToUid: req.ToUid})
-		return &relation.EmptyResponse{}, err
+		return &api.EmptyResponse{}, err
 	} else {
-		return &relation.EmptyResponse{}, relation.ErrFollowLimit
+		return &api.EmptyResponse{}, api.ErrFollowLimit
 	}
 }
 
-func (RelationBFF) Unfollow(ctx context.Context, req *relation.FollowRequest) (*relation.EmptyResponse, error) {
-	if req.Source == relation.Source_Undefined {
-		return &relation.EmptyResponse{}, relation.ErrSourceUndefined
+func (RelationBFF) Unfollow(ctx context.Context, req *api.FollowRequest) (*api.EmptyResponse, error) {
+	if req.Source == api.Source_Undefined {
+		return &api.EmptyResponse{}, api.ErrSourceUndefined
 	}
 	_, err := client.Unfollow(ctx, &relationsvc.FollowRequest{Uid: req.Uid, ToUid: req.ToUid})
-	return &relation.EmptyResponse{}, err
+	return &api.EmptyResponse{}, err
 }
 
-func (RelationBFF) GetFollowList(ctx context.Context, req *relation.ListRequest) (*relation.ListResponse, error) {
-	if req.Source == relation.Source_Undefined {
-		return &relation.ListResponse{}, relation.ErrSourceUndefined
+func (RelationBFF) GetFollowList(ctx context.Context, req *api.ListRequest) (*api.ListResponse, error) {
+	if req.Source == api.Source_Undefined {
+		return &api.ListResponse{}, api.ErrSourceUndefined
 	}
 	res, err := client.GetFollowList(ctx, &relationsvc.ListRequest{Uid: req.Uid, LastId: req.LastId})
 	return translateList(res), err
 }
 
-func (RelationBFF) GetFollowerList(ctx context.Context, req *relation.ListRequest) (*relation.ListResponse, error) {
-	if req.Source == relation.Source_Undefined {
-		return &relation.ListResponse{}, relation.ErrSourceUndefined
+func (RelationBFF) GetFollowerList(ctx context.Context, req *api.ListRequest) (*api.ListResponse, error) {
+	if req.Source == api.Source_Undefined {
+		return &api.ListResponse{}, api.ErrSourceUndefined
 	}
 	res, err := client.GetFollowerList(ctx, &relationsvc.ListRequest{Uid: req.Uid, LastId: req.LastId})
 	return translateList(res), err
 }
 
-func (RelationBFF) GetRelation(ctx context.Context, req *relation.RelationRequest) (*relation.RelationResponse, error) {
-	if req.Source == relation.Source_Undefined {
-		return &relation.RelationResponse{}, relation.ErrSourceUndefined
+func (RelationBFF) GetRelation(ctx context.Context, req *api.RelationRequest) (*api.RelationResponse, error) {
+	if req.Source == api.Source_Undefined {
+		return &api.RelationResponse{}, api.ErrSourceUndefined
 	}
 	res, err := client.GetRelation(ctx, &relationsvc.RelationRequest{Uid: req.Uid, Uids: req.Uids})
 	return translateRelation(res), err
 }
 
-func (RelationBFF) GetRelationCount(ctx context.Context, req *relation.CountRequest) (*relation.CountResponse, error) {
-	if req.Source == relation.Source_Undefined {
-		return &relation.CountResponse{}, relation.ErrSourceUndefined
+func (RelationBFF) GetRelationCount(ctx context.Context, req *api.CountRequest) (*api.CountResponse, error) {
+	if req.Source == api.Source_Undefined {
+		return &api.CountResponse{}, api.ErrSourceUndefined
 	}
 	res, err := client.GetRelationCount(ctx, &relationsvc.BatchRequest{Uids: req.Uids})
 	return translateCount(res), err
 }
 
 //GetCommonRelation 共同关注
-func (RelationBFF) GetCommonRelation(ctx context.Context, req *relation.FollowRequest) (*relation.BatchResponse, error) {
-	if req.Source == relation.Source_Undefined {
-		return &relation.BatchResponse{}, relation.ErrSourceUndefined
+func (RelationBFF) GetCommonRelation(ctx context.Context, req *api.FollowRequest) (*api.BatchResponse, error) {
+	if req.Source == api.Source_Undefined {
+		return &api.BatchResponse{}, api.ErrSourceUndefined
 	}
 	fm, err := client.GetUsersFollow(ctx, &relationsvc.BatchRequest{Uids: []int64{req.Uid, req.ToUid}})
 	if err != nil {
-		return &relation.BatchResponse{}, err
+		return &api.BatchResponse{}, err
 	}
 	uf, ok := fm.Fm[req.Uid]
 	if !ok || uf == nil {
-		return &relation.BatchResponse{}, nil
+		return &api.BatchResponse{}, nil
 	}
 	tf, ok := fm.Fm[req.ToUid]
 	if !ok || tf == nil {
-		return &relation.BatchResponse{}, nil
+		return &api.BatchResponse{}, nil
 	}
 	m := make(map[int64]struct{}, len(uf.List))
 	for _, v := range uf.List {
@@ -112,22 +111,22 @@ func (RelationBFF) GetCommonRelation(ctx context.Context, req *relation.FollowRe
 			uids = append(uids, v.ToUid)
 		}
 	}
-	return &relation.BatchResponse{Uids: uids}, nil
+	return &api.BatchResponse{Uids: uids}, nil
 }
 
 //GetRelationChain 我关注的人关注了他
-func (RelationBFF) GetRelationChain(ctx context.Context, req *relation.FollowRequest) (*relation.BatchResponse, error) {
-	if req.Source == relation.Source_Undefined {
-		return &relation.BatchResponse{}, relation.ErrSourceUndefined
+func (RelationBFF) GetRelationChain(ctx context.Context, req *api.FollowRequest) (*api.BatchResponse, error) {
+	if req.Source == api.Source_Undefined {
+		return &api.BatchResponse{}, api.ErrSourceUndefined
 	}
 	// todo need logic
 	fm, err := client.GetUsersFollow(ctx, &relationsvc.BatchRequest{Uids: []int64{req.Uid, req.ToUid}})
 	if err != nil {
-		return &relation.BatchResponse{}, err
+		return &api.BatchResponse{}, err
 	}
 	uf, ok := fm.Fm[req.Uid]
 	if !ok || uf == nil {
-		return &relation.BatchResponse{}, nil
+		return &api.BatchResponse{}, nil
 	}
-	return &relation.BatchResponse{}, nil
+	return &api.BatchResponse{}, nil
 }

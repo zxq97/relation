@@ -1,4 +1,4 @@
-package relation
+package api
 
 type ListItem struct {
 	UID        int64 `json:"uid"`

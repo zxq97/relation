@@ -43,7 +43,7 @@ func sfGetUserFollower(ctx context.Context, sess sqlbuilder.Database, producer *
 		if err != nil {
 			return nil, err
 		}
-		_ = sendKafkaMsg(ctx, producer, kafka.TopicRelationCacheRebuild, cast.FormatInt(uid), &RebuildKafka{Uid: uid, LastId: lastid}, kafka.EventTypeListMissed)
+		_ = producer.SendKafkaMsg(ctx, kafka.TopicRelationCacheRebuild, cast.FormatInt(uid), &RebuildKafka{Uid: uid, LastId: lastid}, kafka.EventTypeListMissed)
 		return list, nil
 	})
 	if err != nil {

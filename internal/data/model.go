@@ -13,12 +13,6 @@ type UserFollowCount struct {
 	FollowerCount int32 `db:"uid"`
 }
 
-type UserRelation struct {
-	Relation     int32 `json:"relation"`
-	FollowTime   int64 `json:"follow_time"`
-	FollowedTime int64 `json:"followed_time"`
-}
-
 func po2pb(list []*UserFollow) []*FollowItem {
 	items := make([]*FollowItem, len(list))
 	for k, v := range list {

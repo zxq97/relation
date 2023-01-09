@@ -1,39 +1,40 @@
 package relationtask
 
 import (
-	"time"
-
 	"github.com/zxq97/gotool/config"
 	"github.com/zxq97/gotool/kafka"
-	"github.com/zxq97/relation/internal/cache"
+	"github.com/zxq97/relation/internal/biz"
 	"github.com/zxq97/relation/internal/env"
-	"github.com/zxq97/relation/internal/store"
-
-	loccache "github.com/patrickmn/go-cache"
 )
 
 var (
-	consumers  = []*kafka.Consumer{}
-	localCache *loccache.Cache
+	consumers = []*kafka.Consumer{}
 )
 
-func InitRelationTask(conf *RelationTaskConfig) error {
-	err := env.InitLog(conf.LogPath)
-	if err != nil {
-		return err
-	}
-	localCache = loccache.New(5*time.Minute, 15*time.Minute)
-	cache.InitCache(conf.Redis["redis"], conf.MC["mc"])
-	err = store.InitStore(conf.Mysql["relation"])
-	return err
+type RelationTask struct {
+	biz *biz.RelationTaskBIZ
 }
 
-func InitConsumer(conf *config.KafkaConf) error {
-	relationConsumer, err := kafka.InitConsumer(conf.Addr, []string{kafka.TopicRelationFollow}, "relation_task_follow", relation, env.ApiLogger, env.ExcLogger)
+func InitRelationTask(conf *RelationTaskConfig) (*RelationTask, error) {
+	err := env.InitLog(conf.LogPath)
+	if err != nil {
+		return nil, err
+	}
+	rtb, err := biz.NewRelationTaskBIZ(conf.Redis["redis"], conf.MC["mc"], conf.Mysql["relation"])
+	if err != nil {
+		return nil, err
+	}
+	return &RelationTask{
+		biz: rtb,
+	}, nil
+}
+
+func InitConsumer(conf *config.KafkaConf, task *RelationTask) error {
+	relationConsumer, err := kafka.InitConsumer(conf.Addr, []string{kafka.TopicRelationFollow}, "relation_task_follow", task.relation, env.ApiLogger, env.ExcLogger)
 	if err != nil {
 		return err
 	}
-	rebuildConsumer, err := kafka.InitConsumer(conf.Addr, []string{kafka.TopicRelationCacheRebuild}, "relation_task_rebuild", rebuild, env.ApiLogger, env.ExcLogger)
+	rebuildConsumer, err := kafka.InitConsumer(conf.Addr, []string{kafka.TopicRelationCacheRebuild}, "relation_task_rebuild", task.rebuild, env.ApiLogger, env.ExcLogger)
 	if err != nil {
 		return err
 	}

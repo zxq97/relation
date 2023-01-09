@@ -1,4 +1,4 @@
-package relation
+package api
 
 import "errors"
 

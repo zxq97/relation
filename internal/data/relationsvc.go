@@ -2,43 +2,27 @@ package data
 
 import (
 	"context"
-	"sort"
 
-	"github.com/zxq97/gotool/cast"
-	"github.com/zxq97/gotool/concurrent"
 	"github.com/zxq97/gotool/config"
 	"github.com/zxq97/gotool/kafka"
 	"github.com/zxq97/gotool/memcachex"
 	"github.com/zxq97/gotool/redisx"
-	"github.com/zxq97/relation/internal/env"
 )
 
-func NewRelationSVCRepo(redisConf *config.RedisConf, mcConf *config.MCConf, conf *config.MysqlConf, addr []string) (*relationSVCRepo, error) {
-	repo := &relationSVCRepo{}
-	sess, err := conf.InitDB()
+func NewRelationSvcRepoImpl(redisConf *config.RedisConf, mcConf *config.MCConf, mysqlConf *config.MysqlConf, producer *kafka.Producer) (*RelationSvcRepoImpl, error) {
+	repo := &RelationSvcRepoImpl{}
+	sess, err := mysqlConf.InitDB()
 	if err != nil {
 		return nil, err
 	}
-	producer, err := kafka.InitKafkaProducer(addr, env.ApiLogger, env.ExcLogger)
-	if err != nil {
-		return nil, err
-	}
-	repo.sess = sess
 	repo.producer = producer
+	repo.sess = sess
 	repo.redis = redisx.NewRedisX(redisConf)
 	repo.mc = memcachex.NewMemcacheX(mcConf)
 	return repo, nil
 }
 
-func (repo *relationSVCRepo) Follow(ctx context.Context, uid, touid int64) error {
-	return sendKafkaMsg(ctx, repo.producer, kafka.TopicRelationFollow, cast.FormatInt(uid), &FollowKafka{Uid: uid, ToUid: touid}, kafka.EventTypeCreate)
-}
-
-func (repo *relationSVCRepo) Unfollow(ctx context.Context, uid, touid int64) error {
-	return sendKafkaMsg(ctx, repo.producer, kafka.TopicRelationFollow, cast.FormatInt(uid), &FollowKafka{Uid: uid, ToUid: touid}, kafka.EventTypeDelete)
-}
-
-func (repo *relationSVCRepo) GetFollowList(ctx context.Context, uid, lastid int64) ([]*FollowItem, error) {
+func (repo *RelationSvcRepoImpl) GetUserFollow(ctx context.Context, uid int64) ([]*FollowItem, error) {
 	list, err := getFollowCacheL1(ctx, repo.mc, uid)
 	if err != nil {
 		list, err = getFollowCacheL2(ctx, repo.redis, uid)
@@ -47,28 +31,14 @@ func (repo *relationSVCRepo) GetFollowList(ctx context.Context, uid, lastid int6
 			if err != nil {
 				return nil, err
 			}
-			concurrent.Go(func() {
-				_ = setFollowCacheL1(ctx, repo.mc, uid, list)
-			})
+			_ = setFollowCacheL1(ctx, repo.mc, uid, list)
 		}
-		concurrent.Go(func() {
-			_ = setFollowCacheL2(ctx, repo.redis, uid, list)
-		})
-	}
-	idx := sort.Search(len(list), func(i int) bool {
-		return list[i].ToUid == lastid
-	})
-	if idx != len(list) {
-		right := idx + 20
-		if right > len(list) {
-			right = len(list)
-		}
-		list = list[idx:right]
+		_ = setFollowCacheL2(ctx, repo.redis, uid, list)
 	}
 	return list, nil
 }
 
-func (repo *relationSVCRepo) GetFollowerList(ctx context.Context, uid, lastid int64) ([]*FollowItem, error) {
+func (repo *RelationSvcRepoImpl) GetUserFollower(ctx context.Context, uid, lastid int64) ([]*FollowItem, error) {
 	list, err := getFollowerList(ctx, repo.redis, uid, lastid, 20)
 	if err != nil {
 		list, err = sfGetUserFollower(ctx, repo.sess, repo.producer, uid, lastid)
@@ -76,20 +46,10 @@ func (repo *relationSVCRepo) GetFollowerList(ctx context.Context, uid, lastid in
 			return nil, err
 		}
 	}
-	idx := sort.Search(len(list), func(i int) bool {
-		return list[i].ToUid == lastid
-	})
-	if idx != len(list) {
-		right := idx + 20
-		if right > len(list) {
-			right = len(list)
-		}
-		list = list[idx:right]
-	}
 	return list, nil
 }
 
-func (repo *relationSVCRepo) GetRelation(ctx context.Context, uid int64, uids []int64) (map[int64]*UserRelation, error) {
+func (repo *RelationSvcRepoImpl) GetIsFollowMap(ctx context.Context, uid int64, uids []int64) (map[int64]int64, error) {
 	followMap, err := isFollows(ctx, repo.redis, uid, uids)
 	if err != nil {
 		list, err := sfGetUserFollow(ctx, repo.sess, uid)
@@ -106,6 +66,10 @@ func (repo *relationSVCRepo) GetRelation(ctx context.Context, uid int64, uids []
 			}
 		}
 	}
+	return followMap, nil
+}
+
+func (repo *RelationSvcRepoImpl) GetIsFollowerMap(ctx context.Context, uid int64, uids []int64) (map[int64]int64, error) {
 	followerMap, missed, err := isFollowers(ctx, repo.redis, uid, uids)
 	if err != nil || len(missed) != 0 {
 		dbm, err := sfGetUsersFollow(ctx, repo.sess, missed)
@@ -121,19 +85,10 @@ func (repo *relationSVCRepo) GetRelation(ctx context.Context, uid int64, uids []
 			}
 		}
 	}
-	relationMap := make(map[int64]*UserRelation, len(uids))
-	for k, v := range followMap {
-		relationMap[k].Relation |= 1
-		relationMap[k].FollowTime = v
-	}
-	for k, v := range followerMap {
-		relationMap[k].Relation |= 2
-		relationMap[k].FollowedTime = v
-	}
-	return relationMap, nil
+	return followerMap, nil
 }
 
-func (repo *relationSVCRepo) GetRelationCount(ctx context.Context, uids []int64) (map[int64]*UserFollowCount, error) {
+func (repo *RelationSvcRepoImpl) GetRelationCount(ctx context.Context, uids []int64) (map[int64]*UserFollowCount, error) {
 	m, missed, err := getRelationCount(ctx, repo.redis, uids)
 	if err != nil || len(missed) != 0 {
 		dbm, err := getFollowCount(ctx, repo.sess, missed)
@@ -148,15 +103,23 @@ func (repo *relationSVCRepo) GetRelationCount(ctx context.Context, uids []int64)
 	return m, nil
 }
 
-func (repo *relationSVCRepo) GetUsersFollow(ctx context.Context, uids []int64) (map[int64][]*FollowItem, error) {
+func (repo *RelationSvcRepoImpl) GetUsersFollow(ctx context.Context, uids []int64) (map[int64][]*FollowItem, error) {
 	m, missed, err := getFollowsCacheL1(ctx, repo.mc, uids)
 	if err != nil || len(missed) != 0 {
-		dbm, err := sfGetUsersFollow(ctx, repo.sess, missed)
-		if err != nil {
-			return nil, err
+		m2, missed2, err := getFollowsCacheL2(ctx, repo.redis, missed)
+		if err != nil || len(missed2) != 0 {
+			dbm, err := sfGetUsersFollow(ctx, repo.sess, missed2)
+			if err != nil {
+				return nil, err
+			}
+			for k, v := range dbm {
+				m2[k] = v
+			}
+			_ = setFollowsCacheL2(ctx, repo.redis, dbm)
 		}
-		for k, v := range dbm {
+		for k, v := range m2 {
 			m[k] = v
+			_ = setFollowCacheL1(ctx, repo.mc, k, v)
 		}
 	}
 	return m, nil

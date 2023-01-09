@@ -11,12 +11,12 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/zxq97/gotool/config"
-	relationtask2 "github.com/zxq97/relation/internal/service/relationtask"
+	"github.com/zxq97/relation/internal/service/relationtask"
 )
 
 var (
 	confPath = flag.String("conf", "", "configuration file")
-	conf     relationtask2.RelationTaskConfig
+	conf     relationtask.RelationTaskConfig
 )
 
 func main() {
@@ -27,11 +27,11 @@ func main() {
 	}
 	conf.Initialize()
 
-	err = relationtask2.InitRelationTask(&conf)
+	relationTask, err := relationtask.InitRelationTask(&conf)
 	if err != nil {
 		panic(err)
 	}
-	err = relationtask2.InitConsumer(conf.Kafka["kafka"])
+	err = relationtask.InitConsumer(conf.Kafka["kafka"], relationTask)
 	if err != nil {
 		panic(err)
 	}
@@ -48,10 +48,10 @@ func main() {
 
 	select {
 	case err = <-errCh:
-		relationtask2.StopConsumer()
+		relationtask.StopConsumer()
 		log.Println("relationtask stop err", errCh)
 	case sign := <-sigCh:
-		relationtask2.StopConsumer()
+		relationtask.StopConsumer()
 		log.Println("relationtask stop sign", sign)
 	}
 }

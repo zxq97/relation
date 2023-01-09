@@ -4,55 +4,73 @@ import (
 	"context"
 
 	"github.com/zxq97/relation/internal/biz"
-	"github.com/zxq97/relation/internal/data"
 )
 
 type RelationSvc struct {
-	repo biz.RelationSVCRepo
+	biz *biz.RelationSvcBIZ
 }
 
-func InitRelationSvc(conf *RelationSvcConfig) error {
-	repo, err := data.NewRelationSVCRepo(conf.Redis["redis"], conf.MC["mc"], conf.Mysql["relation"], conf.Kafka["kafka"].Addr)
+func InitRelationSvc(conf *RelationSvcConfig) (*RelationSvc, error) {
+	rsb, err := biz.NewRelationSvcBIZ(conf.Redis["redis"], conf.MC["mc"], conf.Mysql["relation"], conf.Kafka["kafka"].Addr)
 	if err != nil {
-		return err
+		return nil, err
 	}
-
+	return &RelationSvc{
+		biz: rsb,
+	}, nil
 }
 
 //Follow 关注
 func (svc *RelationSvc) Follow(ctx context.Context, req *FollowRequest) (*EmptyResponse, error) {
-	err := svc.repo.Follow(ctx, req.Uid, req.ToUid)
-	if err != nil {
-
-	}
+	return &EmptyResponse{}, svc.biz.Follow(ctx, req.Uid, req.ToUid)
 }
 
 //Unfollow 取关
-func (RelationSvc) Unfollow(ctx context.Context, req *FollowRequest) (*EmptyResponse, error) {
-
+func (svc *RelationSvc) Unfollow(ctx context.Context, req *FollowRequest) (*EmptyResponse, error) {
+	return &EmptyResponse{}, svc.biz.Unfollow(ctx, req.Uid, req.ToUid)
 }
 
 //GetFollowList 关注列表
-func (RelationSvc) GetFollowList(ctx context.Context, req *ListRequest) (*model.FollowList, error) {
-
+func (svc *RelationSvc) GetFollowList(ctx context.Context, req *ListRequest) (*FollowList, error) {
+	list, err := svc.biz.GetFollowList(ctx, req.Uid, req.LastId)
+	if err != nil {
+		return &FollowList{}, err
+	}
+	return listDO2DTO(list), nil
 }
 
 //GetFollowerList 粉丝列表
-func (RelationSvc) GetFollowerList(ctx context.Context, req *ListRequest) (*model.FollowList, error) {
-
+func (svc *RelationSvc) GetFollowerList(ctx context.Context, req *ListRequest) (*FollowList, error) {
+	list, err := svc.biz.GetFollowerList(ctx, req.Uid, req.LastId)
+	if err != nil {
+		return &FollowList{}, err
+	}
+	return listDO2DTO(list), nil
 }
 
 //GetRelation 好有关系
-func (RelationSvc) GetRelation(ctx context.Context, req *RelationRequest) (*RelationResponse, error) {
-
+func (svc *RelationSvc) GetRelation(ctx context.Context, req *RelationRequest) (*RelationResponse, error) {
+	m, err := svc.biz.GetRelation(ctx, req.Uid, req.Uids)
+	if err != nil {
+		return &RelationResponse{}, err
+	}
+	return rmDO2DTO(m), nil
 }
 
 //GetRelationCount 关注 粉丝 数量
-func (RelationSvc) GetRelationCount(ctx context.Context, req *BatchRequest) (*CountResponse, error) {
-
+func (svc *RelationSvc) GetRelationCount(ctx context.Context, req *BatchRequest) (*CountResponse, error) {
+	m, err := svc.biz.GetRelationCount(ctx, req.Uids)
+	if err != nil {
+		return &CountResponse{}, err
+	}
+	return cmDO2DTO(m), nil
 }
 
 //GetUsersFollow 获取全量关注
-func (RelationSvc) GetUsersFollow(ctx context.Context, req *BatchRequest) (*UserFollowResponse, error) {
-
+func (svc *RelationSvc) GetUsersFollow(ctx context.Context, req *BatchRequest) (*UserFollowResponse, error) {
+	m, err := svc.biz.GetUsersFollow(ctx, req.Uids)
+	if err != nil {
+		return &UserFollowResponse{}, err
+	}
+	return lmDO2DTO(m), nil
 }

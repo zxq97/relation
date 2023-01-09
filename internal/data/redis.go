@@ -21,6 +21,37 @@ const (
 	followerField = "follower"
 )
 
+func getFollowsCacheL2(ctx context.Context, rdx *redisx.RedisX, uids []int64) (map[int64][]*FollowItem, []int64, error) {
+	cmdMap := make(map[int64]*redis.StringStringMapCmd, len(uids))
+	pipe := rdx.Pipeline()
+	for _, v := range uids {
+		key := fmt.Sprintf(redisKeyHUserFollow, v)
+		cmdMap[v] = pipe.HGetAll(ctx, key)
+	}
+	_, err := pipe.Exec(ctx)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "cache get follow")
+	}
+	lm := make(map[int64][]*FollowItem, len(uids))
+	missed := make([]int64, 0, len(uids))
+	for k, v := range cmdMap {
+		val := v.Val()
+		if len(val) == 0 {
+			missed = append(missed, k)
+			continue
+		}
+		list := make([]*FollowItem, 0, len(val))
+		for t, c := range val {
+			list = append(list, &FollowItem{
+				ToUid:      cast.ParseInt(t, 0),
+				CreateTime: cast.ParseInt(c, 0),
+			})
+		}
+		lm[k] = list
+	}
+	return lm, missed, nil
+}
+
 func getFollowCacheL2(ctx context.Context, rdx *redisx.RedisX, uid int64) ([]*FollowItem, error) {
 	key := fmt.Sprintf(redisKeyHUserFollow, uid)
 	val, err := rdx.HGetAll(ctx, key).Result()
@@ -46,6 +77,21 @@ func setFollowCacheL2(ctx context.Context, rdx *redisx.RedisX, uid int64, list [
 	}
 	key := fmt.Sprintf(redisKeyHUserFollow, uid)
 	return rdx.HMSetEX(ctx, key, field, relationCacheL2TTL)
+}
+
+func setFollowsCacheL2(ctx context.Context, rdx *redisx.RedisX, m map[int64][]*FollowItem) error {
+	pipe := rdx.Pipeline()
+	for k, v := range m {
+		field := make(map[string]interface{}, len(v))
+		for _, u := range v {
+			field[cast.FormatInt(u.ToUid)] = u.CreateTime
+		}
+		key := fmt.Sprintf(redisKeyHUserFollow, k)
+		pipe.HMSet(ctx, key, field)
+		pipe.Expire(ctx, key, relationCacheL2TTL)
+	}
+	_, err := pipe.Exec(ctx)
+	return err
 }
 
 func addFollowCacheL2(ctx context.Context, rdx *redisx.RedisX, uid int64, list []*FollowItem) error {
