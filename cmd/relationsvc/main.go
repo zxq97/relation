@@ -11,7 +11,7 @@ import (
 
 	"github.com/zxq97/gotool/config"
 	"github.com/zxq97/gotool/rpc"
-	"github.com/zxq97/relation/internal/relationsvc"
+	"github.com/zxq97/relation/internal/service/relationsvc"
 	"google.golang.org/grpc/reflection"
 )
 
@@ -27,7 +27,7 @@ func main() {
 		panic(err)
 	}
 	conf.Initialize()
-	err = relationsvc.InitRelationSvc(&conf)
+	relationSvc, err := relationsvc.InitRelationSvc(&conf)
 	if err != nil {
 		panic(err)
 	}
@@ -40,7 +40,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	relationsvc.RegisterRelationSvcServer(svc, relationsvc.RelationSvc{})
+	relationsvc.RegisterRelationSvcServer(svc, relationSvc)
 
 	lis, err := net.Listen("tcp", conf.Svc.Bind)
 	if err != nil {

@@ -11,7 +11,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/zxq97/gotool/config"
-	"github.com/zxq97/relation/internal/relationtask"
+	"github.com/zxq97/relation/internal/service/relationtask"
 )
 
 var (
@@ -27,11 +27,11 @@ func main() {
 	}
 	conf.Initialize()
 
-	err = relationtask.InitRelationTask(&conf)
+	relationTask, err := relationtask.InitRelationTask(&conf)
 	if err != nil {
 		panic(err)
 	}
-	err = relationtask.InitConsumer(conf.Kafka["kafka"])
+	err = relationtask.InitConsumer(conf.Kafka["kafka"], relationTask)
 	if err != nil {
 		panic(err)
 	}
