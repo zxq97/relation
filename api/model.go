@@ -16,7 +16,7 @@ type RItem struct {
 	FollowedTime int64 `json:"followed_time"`
 }
 
-func listDTO2DO(val *ListResponse) []*ListItem {
+func listDTO2VO(val *ListResponse) []*ListItem {
 	if val == nil || len(val.ItemList) == 0 {
 		return nil
 	}
@@ -30,7 +30,7 @@ func listDTO2DO(val *ListResponse) []*ListItem {
 	return list
 }
 
-func countDTO2DO(val *CountResponse) map[int64]*CountItem {
+func countDTO2VO(val *CountResponse) map[int64]*CountItem {
 	if val == nil || len(val.RelationCount) == 0 {
 		return nil
 	}
@@ -44,7 +44,7 @@ func countDTO2DO(val *CountResponse) map[int64]*CountItem {
 	return m
 }
 
-func itemDTO2DO(val *RelationResponse) map[int64]*RItem {
+func itemDTO2VO(val *RelationResponse) map[int64]*RItem {
 	if val == nil || len(val.Rm) == 0 {
 		return nil
 	}
