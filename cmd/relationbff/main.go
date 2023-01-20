@@ -36,8 +36,8 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	// todo black conn
-	relationBFF, err := relationbff.InitRelationBFF(&conf, conn)
+	blackConn, err := rpc.NewGrpcConn(etcdCli, "account", conf.Hystrix["accountbff"])
+	relationBFF, err := relationbff.InitRelationBFF(&conf, conn, blackConn)
 	if err != nil {
 		panic(err)
 	}

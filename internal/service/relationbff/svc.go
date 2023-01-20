@@ -3,6 +3,7 @@ package relationbff
 import (
 	"context"
 
+	account "github.com/zxq97/account/api"
 	"github.com/zxq97/relation/api"
 	"github.com/zxq97/relation/internal/env"
 	"github.com/zxq97/relation/internal/service/relationsvc"
@@ -10,17 +11,19 @@ import (
 )
 
 type RelationBFF struct {
-	client relationsvc.RelationSvcClient
+	client        relationsvc.RelationSvcClient
+	accountClient *account.AccountClientImpl
 }
 
-func InitRelationBFF(conf *RelationBffConfig, conn *grpc.ClientConn) (*RelationBFF, error) {
+func InitRelationBFF(conf *RelationBffConfig, conn, blackConn *grpc.ClientConn) (*RelationBFF, error) {
 	err := env.InitLog(conf.LogPath)
 	if err != nil {
 		return nil, err
 	}
 	client := relationsvc.NewRelationSvcClient(conn)
 	return &RelationBFF{
-		client: client,
+		client:        client,
+		accountClient: account.NewAccountClientImpl(blackConn),
 	}, nil
 }
 
@@ -29,7 +32,13 @@ func (bff *RelationBFF) Follow(ctx context.Context, req *api.FollowRequest) (*ap
 		return &api.EmptyResponse{}, api.ErrSourceUndefined
 	}
 	// todo check black
-
+	m, err := bff.accountClient.CheckBlacked(ctx, req.Uid, []int64{req.ToUid})
+	if err != nil {
+		return &api.EmptyResponse{}, err
+	}
+	if _, ok := m[req.ToUid]; ok {
+		return &api.EmptyResponse{}, api.ErrBlacked
+	}
 	res, err := bff.client.GetRelationCount(ctx, &relationsvc.BatchRequest{Uids: []int64{req.Uid}})
 	if err != nil {
 		return &api.EmptyResponse{}, err
