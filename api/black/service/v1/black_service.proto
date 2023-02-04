@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+package black.service.v1;
+
+option go_package = "api/black/service/v1;v1";
+
+import "google/protobuf/empty.proto";
+
+message BlackRequest {
+  int64 uid = 1;
+  int64 to_uid = 2;
+}
+
+message ListRequest {
+  int64 uid = 1;
+  int64 last_id = 2;
+}
+
+message BlackItem {
+  int64 to_uid = 1;
+  int64 create_time = 2;
+}
+
+message ListResponse {
+  repeated BlackItem list = 1;
+  bool has_more = 2;
+}
+
+message CheckRequest {
+  int64 uid = 1;
+  repeated int64 uids = 2;
+}
+
+message CheckResponse {
+  map<int64, bool> black_map = 1;
+}
+
+service BlackSvc {
+  rpc Black(BlackRequest) returns (google.protobuf.Empty);
+  rpc CancelBlack(BlackRequest) returns (google.protobuf.Empty);
+  rpc GetBlackList(ListRequest) returns (ListResponse);
+  rpc CheckBlacked(CheckRequest) returns (CheckResponse);
+}

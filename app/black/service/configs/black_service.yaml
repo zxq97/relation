@@ -1,0 +1,31 @@
+server:
+  name: black_service
+  http_bind: :10020
+  bind: :10021
+
+etcd:
+  addr:
+    - 127.0.0.1:2379
+  ttl: 3
+
+redis:
+  addr:
+    - 127.0.0.1:6379
+  db: 0
+
+mysql:
+  master: 127.0.0.1
+  slave:
+    - 127.0.0.1
+  port: 3306
+  user: root
+  db: zzlove_black
+  password: GUOan1992
+
+memcache:
+  addr:
+    - 127.0.0.1:11211
+
+kafka:
+  addr:
+    - 127.0.0.1:9092

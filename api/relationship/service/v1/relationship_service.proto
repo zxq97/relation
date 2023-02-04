@@ -1,0 +1,73 @@
+syntax = "proto3";
+
+package relationship.service.v1;
+
+option go_package = "api/relationship/service/v1;v1";
+
+import "google/protobuf/empty.proto";
+
+message FollowRequest {
+  int64 uid = 1;
+  int64 to_uid = 2;
+}
+
+message FollowItem {
+  int64 to_uid = 1;
+  int64 create_time = 2;
+}
+
+message FollowList {
+  repeated FollowItem list = 1;
+}
+
+message RelationRequest {
+  int64 uid = 1;
+  repeated int64 uids = 2;
+}
+
+message RelationItem {
+  int32 relation = 1;
+  int64 follow_time = 2;
+  int64 followed_time = 3;
+}
+
+message RelationResponse {
+  map<int64, RelationItem> rm = 1;
+}
+
+message ListRequest {
+  int64 uid = 1;
+  int64 last_id = 2;
+}
+
+message ListResponse {
+  FollowList list = 1;
+  bool has_more = 2;
+}
+
+message BatchRequest {
+  repeated int64 uids = 1;
+}
+
+message RelationCount {
+  int32 follow_count = 1;
+  int32 follower_count = 2;
+}
+
+message CountResponse {
+  map<int64, RelationCount> relation_count = 1;
+}
+
+message UserFollowResponse {
+  map<int64, FollowList> fm = 1;
+}
+
+service RelationSvc {
+  rpc Follow(FollowRequest) returns (google.protobuf.Empty);
+  rpc Unfollow(FollowRequest) returns (google.protobuf.Empty);
+  rpc GetFollowList(ListRequest) returns (ListResponse);
+  rpc GetFollowerList(ListRequest) returns (ListResponse);
+  rpc GetRelation(RelationRequest) returns (RelationResponse);
+  rpc GetRelationCount(BatchRequest) returns (CountResponse);
+  rpc GetUsersFollow(BatchRequest) returns (UserFollowResponse);
+}

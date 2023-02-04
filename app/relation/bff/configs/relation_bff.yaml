@@ -1,0 +1,9 @@
+server:
+  name: relationship_service
+  http_bind: :10014
+  bind: :10015
+
+etcd:
+  addr:
+    - 127.0.0.1:2379
+  ttl: 3
