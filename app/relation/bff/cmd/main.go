@@ -14,7 +14,7 @@ import (
 	"github.com/zxq97/gokit/pkg/etcd"
 	"github.com/zxq97/gokit/pkg/rpc"
 	blackv1 "github.com/zxq97/relation/api/black/service/v1"
-	v1 "github.com/zxq97/relation/api/relation/bff/v1"
+	"github.com/zxq97/relation/api/relation/bff/v1"
 	relationshipv1 "github.com/zxq97/relation/api/relationship/service/v1"
 	"github.com/zxq97/relation/app/relation/bff/internal/biz"
 	"github.com/zxq97/relation/app/relation/bff/internal/conf"
