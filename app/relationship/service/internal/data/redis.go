@@ -96,7 +96,15 @@ func (r *relationshipRepo) setFollowsCacheL2(ctx context.Context, m map[int64][]
 
 func (r *relationshipRepo) getFollowerList(ctx context.Context, uid, lastid, offset int64) ([]*biz.FollowItem, error) {
 	key := fmt.Sprintf(redisKeyZUserFollower, uid)
-	zs, err := r.redis.ZRevRangeByMemberWithScores(ctx, key, lastid, offset)
+	var (
+		zs  []redis.Z
+		err error
+	)
+	if lastid == 0 {
+		zs, err = r.redis.ZRevRangeWithScores(ctx, key, 0, 19).Result()
+	} else {
+		zs, err = r.redis.ZRevRangeByMemberWithScores(ctx, key, lastid, offset)
+	}
 	if err != nil {
 		return nil, err
 	}
