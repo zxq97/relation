@@ -1,5 +1,5 @@
 server:
-  name: relationship_service
+  name: relation_bff
   http_bind: :10014
   bind: :10015
 

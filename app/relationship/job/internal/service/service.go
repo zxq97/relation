@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	once *sync.Once
+	once sync.Once
 )
 
 type RelationshipJob struct {
