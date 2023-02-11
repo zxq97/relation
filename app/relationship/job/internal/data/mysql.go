@@ -4,9 +4,9 @@ import (
 	"context"
 
 	"github.com/pkg/errors"
+	"github.com/zxq97/gokit/pkg/cast"
 	"github.com/zxq97/relation/app/relationship/job/internal/biz"
 	"gorm.io/gorm"
-	"upper.io/db.v3"
 )
 
 func (r *relationshipRepo) follow(ctx context.Context, uid, touid int64) error {
@@ -51,7 +51,7 @@ func (r *relationshipRepo) unfollow(ctx context.Context, uid, touid int64) error
 
 func (r *relationshipRepo) getUserFollower(ctx context.Context, uid, lastid int64) ([]*biz.FollowItem, error) {
 	uf := []*UserFollower{}
-	filter := db.Cond{"uid": uid}
+	filter := "`uid` = ?"
 	if lastid != 0 {
 		sql := "SELECT `id` FROM user_followers WHERE `uid` = ? AND `to_uid` = ? LIMIT 1"
 		var id int64
@@ -59,9 +59,9 @@ func (r *relationshipRepo) getUserFollower(ctx context.Context, uid, lastid int6
 		if err != nil {
 			return nil, errors.Wrap(err, "get last id")
 		}
-		filter["id < "] = id
+		filter += " AND `id` < " + cast.FormatInt(id)
 	}
-	err := r.db.WithContext(ctx).Select("to_uid", "create_at").Where(filter).Order("create_at DESC").Limit(100).Find(&uf).Error
+	err := r.db.WithContext(ctx).Select("to_uid", "create_at").Where(filter, uid).Order("create_at DESC").Limit(100).Find(&uf).Error
 	if err != nil {
 		return nil, errors.Wrap(err, "db get user follower")
 	}
