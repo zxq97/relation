@@ -21,11 +21,11 @@ func (r *relationshipRepo) follow(ctx context.Context, uid, touid int64) error {
 			return errors.Wrap(err, "add follower")
 		}
 		sql = "INSERT INTO user_relation_counts (`uid`, `follow_count`) VALUES (?, 1) ON DUPLICATE KEY UPDATE `follow_count` = `follow_count` + 1"
-		if err := tx.Exec(sql, uid, touid).Error; err != nil {
+		if err := tx.Exec(sql, uid).Error; err != nil {
 			return errors.Wrap(err, "add follow count")
 		}
 		sql = "INSERT INTO user_relation_counts (`uid`, `follower_count`) VALUES (?, 1) ON DUPLICATE KEY UPDATE `follower_count` = `follower_count` + 1"
-		return errors.Wrap(tx.Exec(sql, touid, uid).Error, "add follower count")
+		return errors.Wrap(tx.Exec(sql, touid).Error, "add follower count")
 	})
 }
 
