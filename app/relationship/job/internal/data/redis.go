@@ -46,7 +46,7 @@ func (r *relationshipRepo) appendFollower(ctx context.Context, uid int64, list [
 			Score:  float64(v.CreateTime),
 		}
 	}
-	return r.redis.ZAddXEX(ctx, key, zs, time.Hour)
+	return r.redis.ZAddEX(ctx, key, zs, time.Hour)
 }
 
 func (r *relationshipRepo) addFollowCacheL2(ctx context.Context, uid int64, list []*biz.FollowItem) error {
