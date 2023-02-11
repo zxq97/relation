@@ -7,6 +7,7 @@ import (
 	"github.com/bradfitz/gomemcache/memcache"
 	"github.com/zxq97/gokit/pkg/cache/xredis"
 	"github.com/zxq97/gokit/pkg/cast"
+	"github.com/zxq97/gokit/pkg/mq"
 	"github.com/zxq97/gokit/pkg/mq/kafka"
 	"github.com/zxq97/relation/app/relationship/service/internal/biz"
 	"gorm.io/gorm"
@@ -31,11 +32,11 @@ func NewRelationshipRepo(producer *kafka.Producer, mc *memcache.Client, redis *x
 }
 
 func (r *relationshipRepo) Follow(ctx context.Context, uid, touid int64) error {
-	return r.producer.SendMessage(ctx, kafka.TopicRelationFollow, cast.FormatInt(uid), &biz.FollowKafka{Uid: uid, ToUid: touid, CreateTime: time.Now().UnixMilli()}, kafka.EventTypeCreate)
+	return r.producer.SendMessage(ctx, kafka.TopicRelationFollow, cast.FormatInt(uid), mq.TagCreate, &biz.FollowKafka{Uid: uid, ToUid: touid, CreateTime: time.Now().UnixMilli()})
 }
 
 func (r *relationshipRepo) Unfollow(ctx context.Context, uid, touid int64) error {
-	return r.producer.SendMessage(ctx, kafka.TopicRelationFollow, cast.FormatInt(uid), &biz.FollowKafka{Uid: uid, ToUid: touid, CreateTime: time.Now().UnixMilli()}, kafka.EventTypeDelete)
+	return r.producer.SendMessage(ctx, kafka.TopicRelationFollow, cast.FormatInt(uid), mq.TagDelete, &biz.FollowKafka{Uid: uid, ToUid: touid, CreateTime: time.Now().UnixMilli()})
 }
 
 func (r *relationshipRepo) GetRelationCount(ctx context.Context, uids []int64) (map[int64]*biz.RelationCount, error) {

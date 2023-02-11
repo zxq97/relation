@@ -7,6 +7,7 @@ import (
 
 	"github.com/zxq97/gokit/pkg/cast"
 	"github.com/zxq97/gokit/pkg/concurrent"
+	"github.com/zxq97/gokit/pkg/mq"
 	"github.com/zxq97/gokit/pkg/mq/kafka"
 	"github.com/zxq97/relation/app/relationship/service/internal/biz"
 	"golang.org/x/sync/singleflight"
@@ -43,7 +44,7 @@ func (r *relationshipRepo) sfGetUserFollower(ctx context.Context, uid, lastid in
 		if err != nil {
 			return nil, err
 		}
-		_ = r.producer.SendMessage(ctx, kafka.TopicRelationCacheRebuild, cast.FormatInt(uid), &biz.RebuildKafka{Uid: uid, LastId: lastid}, kafka.EventTypeListMissed)
+		_ = r.producer.SendMessage(ctx, kafka.TopicRelationCacheRebuild, cast.FormatInt(uid), mq.TagListMissed, &biz.RebuildKafka{Uid: uid, LastId: lastid})
 		return list, nil
 	})
 	if err != nil {

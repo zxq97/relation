@@ -52,8 +52,8 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	redisCli := xredis.NewRedis(appConf.Redis)
-	memcacheCli := xmemcache.NewMemcache(appConf.Memcache)
+	redisCli := xredis.NewXRedis(appConf.Redis)
+	memcacheCli := xmemcache.NewXMemcache(appConf.Memcache)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	svc, err := rpc.NewGrpcServer(ctx, appConf.Server, etcdCli)

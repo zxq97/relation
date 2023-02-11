@@ -1,17 +1,23 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/zxq97/gokit/pkg/cache/xmemcache"
 	"github.com/zxq97/gokit/pkg/cache/xredis"
 	"github.com/zxq97/gokit/pkg/config"
 	"github.com/zxq97/gokit/pkg/database/xmysql"
+	"github.com/zxq97/gokit/pkg/mq"
+	"github.com/zxq97/gokit/pkg/mq/kafka"
+	server2 "github.com/zxq97/gokit/pkg/server"
+	"github.com/zxq97/gokit/pkg/server/consumer"
 	"github.com/zxq97/relation/app/relationship/job/internal/biz"
 	"github.com/zxq97/relation/app/relationship/job/internal/conf"
 	"github.com/zxq97/relation/app/relationship/job/internal/data"
@@ -37,16 +43,27 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	redisCli := xredis.NewRedis(appConf.Redis)
-	memcacheCli := xmemcache.NewMemcache(appConf.Memcache)
+	redisCli := xredis.NewXRedis(appConf.Redis)
+	memcacheCli := xmemcache.NewXMemcache(appConf.Memcache)
 	repo := data.NewRelationshipRepo(memcacheCli, redisCli, dbCli)
 	userCase := biz.NewRelationshipUseCase(repo)
 	server := service.NewRelationshipJob(userCase)
-	err = server.AddConsumer(appConf.Kafka)
+	followConsumer, err := kafka.NewConsumer(appConf.Kafka, []string{kafka.TopicRelationFollow}, "relationship_job_follow", server.Relation, mq.WithProcTimeout(time.Second*3))
 	if err != nil {
 		panic(err)
 	}
-	server.Start()
+	rebuildConsumer, err := kafka.NewConsumer(appConf.Kafka, []string{kafka.TopicRelationCacheRebuild}, "relationship_job_rebuild", server.Rebuild, mq.WithProcTimeout(time.Second*3))
+	if err != nil {
+		panic(err)
+	}
+	s, err := consumer.NewServer([]mq.Consumer{followConsumer, rebuildConsumer}, server2.WithStartTimeout(time.Second), server2.WithStopTimeout(time.Second))
+	if err != nil {
+		panic(err)
+	}
+	if err = s.Start(context.Background()); err != nil {
+		panic(err)
+	}
+
 	errCh := make(chan error, 1)
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)
@@ -57,10 +74,10 @@ func main() {
 
 	select {
 	case err = <-errCh:
-		server.Stop()
-		log.Println("relationship job stop err", err)
+		serr := s.Stop(context.Background())
+		log.Println("relationship job stop err", err, serr)
 	case sig := <-sigCh:
-		server.Stop()
+		s.Stop(context.Background())
 		log.Println("relationship job stop sign", sig)
 	}
 }
