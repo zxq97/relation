@@ -2,8 +2,6 @@ package data
 
 import (
 	"context"
-	"log"
-	"time"
 
 	blackv1 "github.com/zxq97/relation/api/black/service/v1"
 	relationshipv1 "github.com/zxq97/relation/api/relationship/service/v1"
@@ -25,7 +23,6 @@ func NewRelationRepo(relationshipClient relationshipv1.RelationSvcClient, blackC
 }
 
 func (r *relationRepo) Follow(ctx context.Context, uid, touid int64) error {
-	now := time.Now()
 	res, err := r.blackClient.CheckBlacked(ctx, &blackv1.CheckRequest{Uid: uid, Uids: []int64{touid}})
 	if err != nil {
 		return err
@@ -33,7 +30,6 @@ func (r *relationRepo) Follow(ctx context.Context, uid, touid int64) error {
 	if _, ok := res.BlackMap[touid]; ok {
 		return biz.ErrBlacked
 	}
-	log.Println("check black ut", time.Since(now), err)
 	res, err = r.blackClient.CheckBlacked(ctx, &blackv1.CheckRequest{Uid: touid, Uids: []int64{uid}})
 	if err != nil {
 		return err
@@ -41,7 +37,6 @@ func (r *relationRepo) Follow(ctx context.Context, uid, touid int64) error {
 	if _, ok := res.BlackMap[uid]; ok {
 		return biz.ErrBlacked
 	}
-	log.Println("check black tu", time.Since(now), err)
 	cm, err := r.relationshipClient.GetRelationCount(ctx, &relationshipv1.BatchRequest{Uids: []int64{uid}})
 	if err != nil {
 		return err
@@ -49,9 +44,7 @@ func (r *relationRepo) Follow(ctx context.Context, uid, touid int64) error {
 	if c, ok := cm.RelationCount[uid]; ok && c.FollowCount >= 3000 {
 		return biz.ErrFollowLimit
 	}
-	log.Println("check relation count", time.Since(now), err)
 	_, err = r.relationshipClient.Follow(ctx, &relationshipv1.FollowRequest{Uid: uid, ToUid: touid})
-	log.Println("call relationship", time.Since(now), err)
 	return err
 }
 
