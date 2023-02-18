@@ -2,93 +2,54 @@ package data
 
 import (
 	"context"
-	"fmt"
 	"time"
 
-	"github.com/bradfitz/gomemcache/memcache"
-	"github.com/patrickmn/go-cache"
-	"github.com/zxq97/gokit/pkg/cache/xredis"
-	"github.com/zxq97/gokit/pkg/concurrent"
+	"github.com/google/wire"
+	"github.com/zxq97/gokit/pkg/cast"
+	"github.com/zxq97/gokit/pkg/mq/kafka"
 	"github.com/zxq97/relation/app/relationship/job/internal/biz"
-	"gorm.io/gorm"
+	"github.com/zxq97/relation/app/relationship/pkg/dal/cache"
+	"github.com/zxq97/relation/app/relationship/pkg/dal/query"
+	"github.com/zxq97/relation/app/relationship/pkg/message"
 )
 
+var ProviderSet = wire.NewSet(NewRelationshipRepo)
 var _ biz.RelationshipRepo = (*relationshipRepo)(nil)
 
 type relationshipRepo struct {
-	cache *cache.Cache
-	mc    *memcache.Client
-	redis *xredis.XRedis
-	db    *gorm.DB
+	p *kafka.Producer
+	c *cache.Cache
+	q *query.Query
 }
 
-func NewRelationshipRepo(mc *memcache.Client, redis *xredis.XRedis, db *gorm.DB) *relationshipRepo {
-	return &relationshipRepo{
-		cache: cache.New(time.Minute*5, time.Minute*15),
-		mc:    mc,
-		redis: redis,
-		db:    db,
-	}
+func NewRelationshipRepo(p *kafka.Producer, c *cache.Cache, q *query.Query) *relationshipRepo {
+	return &relationshipRepo{p: p, c: c, q: q}
 }
 
 func (r *relationshipRepo) Follow(ctx context.Context, uid, touid int64) error {
-	err := r.follow(ctx, uid, touid)
-	if err != nil {
+	if err := r.follow(ctx, uid, touid); err != nil {
 		return err
 	}
-	now := time.Now().UnixMilli()
-	list := []*biz.FollowItem{{ToUid: touid, CreateTime: now}}
-	eg := concurrent.NewErrGroup(ctx)
-	eg.Go(func() error {
-		return r.addFollowCacheL1(ctx, uid, list)
-	})
-	eg.Go(func() error {
-		return r.addFollowCacheL2(ctx, uid, list)
-	})
-	eg.Go(func() error {
-		return r.addFollower(ctx, touid, &biz.FollowItem{ToUid: uid, CreateTime: now})
-	})
-	eg.Go(func() error {
-		return r.addRelationCount(ctx, uid, touid, 1)
-	})
-	return eg.Wait()
+	if ok := r.c.BatchSyncCount(ctx, touid); ok {
+		_ = r.p.SendMessage(ctx, message.TopicRelationSyncCount, cast.FormatInt(touid), message.TagSync, &message.SyncCount{Uid: touid, TimeWait: time.Now().Add(time.Second).UnixMilli()})
+	}
+	return r.c.Follow(ctx, uid, touid)
 }
 
 func (r *relationshipRepo) Unfollow(ctx context.Context, uid, touid int64) error {
-	err := r.unfollow(ctx, uid, touid)
-	if err != nil {
+	if err := r.unfollow(ctx, uid, touid); err != nil {
 		return err
 	}
-	eg := concurrent.NewErrGroup(ctx)
-	eg.Go(func() error {
-		return r.delFollowCacheL1(ctx, uid, touid)
-	})
-	eg.Go(func() error {
-		return r.delFollowCacheL2(ctx, uid, touid)
-	})
-	eg.Go(func() error {
-		return r.delFollower(ctx, uid, touid)
-	})
-	eg.Go(func() error {
-		return r.addRelationCount(ctx, uid, touid, -1)
-	})
-	return eg.Wait()
+	if ok := r.c.BatchSyncCount(ctx, touid); ok {
+		_ = r.p.SendMessage(ctx, message.TopicRelationSyncCount, cast.FormatInt(touid), message.TagSync, &message.SyncCount{Uid: touid, TimeWait: time.Now().Add(time.Second).UnixMilli()})
+	}
+	return r.c.Unfollow(ctx, uid, touid)
 }
 
 func (r *relationshipRepo) FollowerCacheRebuild(ctx context.Context, uid, lastid int64) error {
-	key := fmt.Sprintf(lcKeyFollower, uid)
-	_, ok := r.localCacheGet(key)
-	if ok {
-		return nil
-	}
 	list, err := r.getUserFollower(ctx, uid, lastid)
 	if err != nil {
 		return err
 	}
-	err = r.appendFollower(ctx, uid, list)
-	if err != nil {
-		return err
-	}
-	r.localCacheSet(key, struct{}{}, time.Minute)
-	return nil
+	return r.c.AppendFollower(ctx, uid, list)
 }

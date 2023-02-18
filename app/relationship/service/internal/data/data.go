@@ -2,45 +2,42 @@ package data
 
 import (
 	"context"
-	"time"
 
-	"github.com/bradfitz/gomemcache/memcache"
-	"github.com/zxq97/gokit/pkg/cache/xredis"
+	"github.com/google/wire"
 	"github.com/zxq97/gokit/pkg/cast"
+	"github.com/zxq97/gokit/pkg/concurrent"
 	"github.com/zxq97/gokit/pkg/mq"
 	"github.com/zxq97/gokit/pkg/mq/kafka"
+	"github.com/zxq97/relation/app/relationship/pkg/bizdata"
+	"github.com/zxq97/relation/app/relationship/pkg/dal/cache"
+	"github.com/zxq97/relation/app/relationship/pkg/dal/query"
+	"github.com/zxq97/relation/app/relationship/pkg/message"
 	"github.com/zxq97/relation/app/relationship/service/internal/biz"
-	"gorm.io/gorm"
 )
 
+var ProviderSet = wire.NewSet(NewRelationshipRepo)
 var _ biz.RelationshipRepo = (*relationshipRepo)(nil)
 
 type relationshipRepo struct {
-	producer *kafka.Producer
-	mc       *memcache.Client
-	redis    *xredis.XRedis
-	db       *gorm.DB
+	p *kafka.Producer
+	c *cache.Cache
+	q *query.Query
 }
 
-func NewRelationshipRepo(producer *kafka.Producer, mc *memcache.Client, redis *xredis.XRedis, db *gorm.DB) biz.RelationshipRepo {
-	return &relationshipRepo{
-		producer: producer,
-		mc:       mc,
-		redis:    redis,
-		db:       db,
-	}
+func NewRelationshipRepo(p *kafka.Producer, c *cache.Cache, q *query.Query) biz.RelationshipRepo {
+	return &relationshipRepo{p: p, c: c, q: q}
 }
 
 func (r *relationshipRepo) Follow(ctx context.Context, uid, touid int64) error {
-	return r.producer.SendMessage(ctx, kafka.TopicRelationFollow, cast.FormatInt(uid), mq.TagCreate, &biz.FollowKafka{Uid: uid, ToUid: touid, CreateTime: time.Now().UnixMilli()})
+	return r.p.SendMessage(ctx, message.TopicRelationFollow, cast.FormatInt(uid), mq.TagCreate, &message.AsyncFollow{Uid: uid, ToUid: touid})
 }
 
 func (r *relationshipRepo) Unfollow(ctx context.Context, uid, touid int64) error {
-	return r.producer.SendMessage(ctx, kafka.TopicRelationFollow, cast.FormatInt(uid), mq.TagDelete, &biz.FollowKafka{Uid: uid, ToUid: touid, CreateTime: time.Now().UnixMilli()})
+	return r.p.SendMessage(ctx, message.TopicRelationFollow, cast.FormatInt(uid), mq.TagDelete, &message.AsyncFollow{Uid: uid, ToUid: touid})
 }
 
-func (r *relationshipRepo) GetRelationCount(ctx context.Context, uids []int64) (map[int64]*biz.RelationCount, error) {
-	m, missed, err := r.cacheGetRelationCount(ctx, uids)
+func (r *relationshipRepo) GetRelationCount(ctx context.Context, uids []int64) (map[int64]*bizdata.RelationCount, error) {
+	m, missed, err := r.c.GetRelationCount(ctx, uids)
 	if err != nil || len(missed) != 0 {
 		dbm, err := r.getRelationCount(ctx, missed)
 		if err != nil {
@@ -49,35 +46,30 @@ func (r *relationshipRepo) GetRelationCount(ctx context.Context, uids []int64) (
 		for k, v := range dbm {
 			m[k] = v
 		}
-		_ = r.setRelationCount(ctx, dbm)
+		_ = r.c.SetRelationCount(ctx, dbm)
 	}
 	return m, nil
 }
 
-func (r *relationshipRepo) GetUsersFollow(ctx context.Context, uids []int64) (map[int64][]*biz.FollowItem, error) {
-	m, missed, err := r.getFollowsCacheL1(ctx, uids)
-	if err != nil || len(missed) != 0 {
-		m2, missed2, err := r.getFollowsCacheL2(ctx, missed)
-		if err != nil || len(missed2) != 0 {
-			dbm, err := r.sfGetUsersFollow(ctx, missed2)
-			if err != nil {
-				return nil, err
-			}
-			for k, v := range dbm {
-				m2[k] = v
-			}
-			_ = r.setFollowsCacheL2(ctx, dbm)
+func (r *relationshipRepo) GetUsersFollow(ctx context.Context, uids []int64) (map[int64][]*bizdata.FollowItem, error) {
+	m, missed, _ := r.c.GetUsersFollow(ctx, uids)
+	if len(missed) != 0 {
+		dbm, err := r.sfGetUsersFollow(ctx, missed)
+		if err != nil {
+			return nil, err
 		}
-		for k, v := range m2 {
+		for k, v := range dbm {
 			m[k] = v
-			_ = r.setFollowCacheL1(ctx, k, v)
 		}
+		concurrent.Go(func() {
+			_ = r.c.SetUsersFollow(ctx, dbm)
+		})
 	}
 	return m, nil
 }
 
-func (r *relationshipRepo) GetUserFollower(ctx context.Context, uid int64, lastid int64) ([]*biz.FollowItem, error) {
-	list, err := r.getFollowerList(ctx, uid, lastid, 20)
+func (r *relationshipRepo) GetUserFollower(ctx context.Context, uid int64, lastid int64) ([]*bizdata.FollowItem, error) {
+	list, err := r.c.GetFollowerList(ctx, uid, lastid)
 	if err != nil {
 		list, err = r.sfGetUserFollower(ctx, uid, lastid)
 		if err != nil {
@@ -88,7 +80,7 @@ func (r *relationshipRepo) GetUserFollower(ctx context.Context, uid int64, lasti
 }
 
 func (r *relationshipRepo) GetIsFollowMap(ctx context.Context, uid int64, uids []int64) (map[int64]int64, error) {
-	followMap, err := r.isFollows(ctx, uid, uids)
+	followMap, err := r.c.IsFollow(ctx, uid, uids)
 	if err != nil {
 		list, err := r.sfGetUserFollow(ctx, uid)
 		if err != nil {
@@ -108,7 +100,7 @@ func (r *relationshipRepo) GetIsFollowMap(ctx context.Context, uid int64, uids [
 }
 
 func (r *relationshipRepo) GetIsFollowerMap(ctx context.Context, uid int64, uids []int64) (map[int64]int64, error) {
-	followerMap, missed, err := r.isFollowers(ctx, uid, uids)
+	followerMap, missed, err := r.c.IsFollower(ctx, uid, uids)
 	if err != nil || len(missed) != 0 {
 		dbm, err := r.sfGetUsersFollow(ctx, missed)
 		if err != nil {

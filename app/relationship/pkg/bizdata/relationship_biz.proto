@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package relationship.service.biz;
+package relationship.pkg.bizdata;
 
-option go_package = "app/relationship/service/internal/biz;biz";
+option go_package = "app/relationship/pkg/bizdata;bizdata";
 
 message FollowItem {
   int64 to_uid = 1;
@@ -23,15 +23,4 @@ message UserRelation {
   int32 relation = 1;
   int64 follow_time = 2;
   int64 followed_time = 3;
-}
-
-message FollowKafka {
-  int64 uid = 1;
-  int64 to_uid = 2;
-  int64 create_time = 3;
-}
-
-message RebuildKafka {
-  int64 uid = 1;
-  int64 last_id = 2;
 }

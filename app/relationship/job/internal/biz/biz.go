@@ -1,6 +1,12 @@
 package biz
 
-import "context"
+import (
+	"context"
+
+	"github.com/google/wire"
+)
+
+var ProviderSet = wire.NewSet(NewRelationshipUseCase)
 
 type RelationshipRepo interface {
 	Follow(context.Context, int64, int64) error

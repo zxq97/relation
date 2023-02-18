@@ -6,13 +6,17 @@ require (
 	github.com/bradfitz/gomemcache v0.0.0-20221031212613-62deef7fc822
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/golang/protobuf v1.5.2
+	github.com/google/wire v0.5.0
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/pkg/errors v0.9.1
-	github.com/zxq97/gokit v0.0.6
+	github.com/robfig/cron/v3 v3.0.1
+	github.com/zxq97/gokit v0.0.7
 	golang.org/x/sync v0.1.0
 	google.golang.org/grpc v1.52.0
 	google.golang.org/protobuf v1.28.1
+	gorm.io/gen v0.3.21
 	gorm.io/gorm v1.24.5
+	gorm.io/plugin/dbresolver v1.4.1
 )
 
 require (
@@ -58,11 +62,14 @@ require (
 	go.uber.org/multierr v1.9.0 // indirect
 	go.uber.org/zap v1.24.0 // indirect
 	golang.org/x/crypto v0.5.0 // indirect
-	golang.org/x/net v0.5.0 // indirect
+	golang.org/x/mod v0.8.0 // indirect
+	golang.org/x/net v0.6.0 // indirect
 	golang.org/x/sys v0.5.0 // indirect
-	golang.org/x/text v0.6.0 // indirect
+	golang.org/x/text v0.7.0 // indirect
+	golang.org/x/tools v0.6.0 // indirect
 	google.golang.org/genproto v0.0.0-20230119192704-9d59e20e5cd1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	gorm.io/driver/mysql v1.4.5 // indirect
-	gorm.io/plugin/dbresolver v1.4.1 // indirect
+	gorm.io/datatypes v1.1.0 // indirect
+	gorm.io/driver/mysql v1.4.7 // indirect
+	gorm.io/hints v1.1.1 // indirect
 )

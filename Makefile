@@ -5,7 +5,7 @@ GOCLEAN=${GOCMD} clean
 build: relationship
 
 .PHONY: \
-    relationbff relationship relationjob black blackjob relationbffprod relationshipprod relationjobprod blackprod blackjobprod
+    relationbff relationship relationjob relationtask black blackjob relationbffprod relationshipprod relationjobprod relationtaskprod blackprod blackjobprod
 
 clean:
 	${GOCLEAN}
@@ -15,6 +15,9 @@ relationship:
 
 relationjob:
 	${GOBUILD} -o /Users/zongxingquan/goland/run/relation_job github.com/zxq97/relation/app/relationship/job/cmd
+
+relationtask:
+	${GOBUILD} -o /Users/zongxingquan/goland/run/relation_task github.com/zxq97/relation/app/relationship/task/cmd
 
 relationbff:
 	${GOBUILD} -o /Users/zongxingquan/goland/run/relation_bff github.com/zxq97/relation/app/relation/bff/cmd
@@ -30,6 +33,9 @@ relationshipprod:
 
 relationjobprod:
 	${GOBUILD} -o /home/work/run/relation_job github.com/zxq97/relation/app/relationship/job/cmd
+
+relationtaskprod:
+	${GOBUILD} -o /home/work/run/relation_task github.com/zxq97/relation/app/relationship/task/cmd
 
 relationbffprod:
 	${GOBUILD} -o /home/work/run/relation_bff github.com/zxq97/relation/app/relation/bff/cmd

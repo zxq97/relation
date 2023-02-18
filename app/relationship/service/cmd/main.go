@@ -19,6 +19,8 @@ import (
 	"github.com/zxq97/gokit/pkg/mq/kafka"
 	"github.com/zxq97/gokit/pkg/rpc"
 	"github.com/zxq97/relation/api/relationship/service/v1"
+	"github.com/zxq97/relation/app/relationship/pkg/dal/cache"
+	"github.com/zxq97/relation/app/relationship/pkg/dal/query"
 	"github.com/zxq97/relation/app/relationship/service/internal/biz"
 	"github.com/zxq97/relation/app/relationship/service/internal/conf"
 	"github.com/zxq97/relation/app/relationship/service/internal/data"
@@ -60,7 +62,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	repo := data.NewRelationshipRepo(producer, memcacheCli, redisCli, dbCli)
+	repo := data.NewRelationshipRepo(producer, cache.Use(redisCli, memcacheCli), query.Use(dbCli))
 	useCase := biz.NewRelationshipUseCase(repo)
 	server := service.NewRelationshipService(useCase)
 	v1.RegisterRelationSvcServer(svc, server)
