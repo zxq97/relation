@@ -176,13 +176,13 @@ func (u userRelationCountDo) DecrByFollowerCount(uid int64, cnt int64) (err erro
 	return
 }
 
-// sql(select uid, follow_count, follower_count where uid in (@uids))
+// sql(select uid, follow_count, follower_count user_relation_counts where uid in (@uids))
 func (u userRelationCountDo) FindUsersRelationCount(uids []int64) (result []*model.UserRelationCount, err error) {
 	var params []interface{}
 
 	var generateSQL strings.Builder
 	params = append(params, uids)
-	generateSQL.WriteString("select uid, follow_count, follower_count where uid in (?) ")
+	generateSQL.WriteString("select uid, follow_count, follower_count user_relation_counts where uid in (?) ")
 
 	var executeSQL *gorm.DB
 	executeSQL = u.UnderlyingDB().Raw(generateSQL.String(), params...).Find(&result) // ignore_security_alert

@@ -31,7 +31,7 @@ type UserRelationCount interface {
 	IncrByFollowerCount(uid, cnt int64) error
 	//sql(update user_relation_counts set follower_count=follower_count-@cnt where uid=@uid limit 1)
 	DecrByFollowerCount(uid, cnt int64) error
-	//sql(select uid, follow_count, follower_count where uid in (@uids))
+	//sql(select uid, follow_count, follower_count user_relation_counts where uid in (@uids))
 	FindUsersRelationCount(uids []int64) ([]*gen.T, error)
 }
 
@@ -40,9 +40,9 @@ type ExtraFollower interface {
 	InsertFollower(uid int64) error
 	//sql(insert into extra_followers (uid, stats) values (@uid, 1))
 	DeleteFollower(uid int64) error
-	//sql(select id, uid, stats limit @limit)
+	//sql(select id, uid, stats from extra_followers limit @limit)
 	FindUnSyncRecord(limit int64) ([]*gen.T, error)
-	//sql(select id, uid, stats where uid=@uid)
+	//sql(select id, uid, stats from extra_followers where uid=@uid)
 	FindUnSyncRecordByUID(uid int64) ([]*gen.T, error)
 	//sql(delete from extra_followers where id in (@ids))
 	DeleteRecord(ids []int64) error

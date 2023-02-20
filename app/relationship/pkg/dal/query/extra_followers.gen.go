@@ -135,13 +135,13 @@ func (e extraFollowerDo) DeleteFollower(uid int64) (err error) {
 	return
 }
 
-// sql(select id, uid, stats limit @limit)
+// sql(select id, uid, stats from extra_followers limit @limit)
 func (e extraFollowerDo) FindUnSyncRecord(limit int64) (result []*model.ExtraFollower, err error) {
 	var params []interface{}
 
 	var generateSQL strings.Builder
 	params = append(params, limit)
-	generateSQL.WriteString("select id, uid, stats limit ? ")
+	generateSQL.WriteString("select id, uid, stats from extra_followers limit ? ")
 
 	var executeSQL *gorm.DB
 	executeSQL = e.UnderlyingDB().Raw(generateSQL.String(), params...).Find(&result) // ignore_security_alert
@@ -150,13 +150,13 @@ func (e extraFollowerDo) FindUnSyncRecord(limit int64) (result []*model.ExtraFol
 	return
 }
 
-// sql(select id, uid, stats where uid=@uid)
+// sql(select id, uid, stats from extra_followers where uid=@uid)
 func (e extraFollowerDo) FindUnSyncRecordByUID(uid int64) (result []*model.ExtraFollower, err error) {
 	var params []interface{}
 
 	var generateSQL strings.Builder
 	params = append(params, uid)
-	generateSQL.WriteString("select id, uid, stats where uid=? ")
+	generateSQL.WriteString("select id, uid, stats from extra_followers where uid=? ")
 
 	var executeSQL *gorm.DB
 	executeSQL = e.UnderlyingDB().Raw(generateSQL.String(), params...).Find(&result) // ignore_security_alert
